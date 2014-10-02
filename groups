@@ -1,0 +1,6 @@
+# UUID                                  	Group Name
+#
+022637c8c0b19030e360762fbd5955d5a569cfb6	Non-Interactive discovery users
+global:Anonymous-Users                  	Anonymous Users
+global:Registered-Users                 	Registered Users
+ldap:cn=gerrit-discovery-committers,ou=Groups,dc=opendaylight,dc=org	ldap/gerrit-discovery-committers
