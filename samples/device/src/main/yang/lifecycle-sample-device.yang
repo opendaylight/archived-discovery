@@ -1,0 +1,34 @@
+/*
+ * Copyright (c) 2014 Ciena Corporation and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+ module lifecycle-sample-device {
+	namespace "urn:opendaylight:lifecycle:samples.device";
+	prefix "lifecycle-sample-device";
+	import lifecycle {prefix lifecycle; revision-date "2014-07-14";}
+	
+	organization "Opedaylight";
+	contact "opendaylight-dev@opendaylight.org";
+	description
+		"Provides the definitions used for sample devices implementing the lifecycle interfaces";
+
+	revision "2014-07-14" {
+		description "Initial revision";
+	}
+	
+	identity device-context {
+		description "test";
+	}
+
+	container devices {
+		list device {
+			key "network-element-ip";
+			unique "network-element-ip";
+
+			uses lifecycle:network-element-details;
+		}
+	}
+}
