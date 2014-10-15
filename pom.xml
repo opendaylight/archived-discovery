@@ -54,6 +54,10 @@
         <centaur.plugin.version>0.3.0-SNAPSHOT</centaur.plugin.version>
         <juniper.plugin.version>0.3.0-SNAPSHOT</juniper.plugin.version>
         <mlpce.version>0.3.0-SNAPSHOT</mlpce.version>
+
+        <nexusproxy>https://nexus.opendaylight.org/content</nexusproxy>
+        <nexus.opendaylight.snapshot>opendaylight.snapshot</nexus.opendaylight.snapshot>
+        <nexus.opendaylight.release>opendaylght.release</nexus.opendaylight.release>
     </properties>
 
     <dependencyManagement>
