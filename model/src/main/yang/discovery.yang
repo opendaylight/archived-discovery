@@ -1,0 +1,159 @@
+/*
+ * Copyright (c) 2014 Ciena Corporation and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+module discovery {
+    namespace "urn:opendaylight:discovery";
+    prefix "discovery";
+
+    import yang-ext { prefix ext; }
+
+    organization "Opedaylight";
+    contact "opendaylight-dev@opendaylight.org";
+    description
+        "Provides RPCs and notifications required to support discovery,
+        synchronization, and reconciliation of the network model. This
+        module contains the notification sent when a new network element
+        is made evident and needs to be processed.";
+
+    revision "2014-07-14" {
+        description "Initial revision";
+    }
+
+    typedef state {
+        type enumeration {
+            enum unknown {
+                value -1;
+            }
+            enum unidentified {
+                value 0;
+            }
+            enum identifying {
+                value 1;
+            }
+            enum identification-failed {
+                value 2;
+            }
+            enum synchronizing {
+                value 3;
+            }
+            enum synchronization-failed {
+                value 4;
+            }
+            enum discovered {
+                value 5;
+            }
+            enum discovery-failed {
+                value 6;
+            }
+            enum managed {
+                value 7;
+            }
+            enum unmanaged {
+                value 8;
+            }
+        }
+    }
+
+    grouping discovery-header {
+        leaf request-id {
+            type string;
+        }
+    }
+
+    grouping network-element-details {
+
+        leaf network-element-ip {
+            type string;
+            description "IP address of NE to be discovered";
+            mandatory true;
+        }
+
+        leaf network-element-type {
+            type string;
+            description "Node type of NE if known";
+            mandatory false;
+        }
+
+        leaf username {
+            type string;
+            description "NE's Username";
+            mandatory false;
+        }
+
+        leaf password {
+            type string;
+            description "NE's Password";
+            mandatory false;
+        }
+    }
+
+    identity network-element-type-context {
+        description "used for discovery management";
+    }
+
+    container network-element-types {
+        list network-element-type {
+            key "type-id";
+            leaf type-id {
+                type string;
+            }
+            ext:context-instance "network-element-type-context";
+        }
+    }
+
+    container discovery-states {
+        config false;
+        list discovery-state {
+            key "id";
+            leaf id {
+                type string;
+            }
+            leaf state {
+                type state;
+            }
+            leaf timestamp {
+                type uint64;
+            }
+        }
+    }
+
+    /*
+     * Notification used to inform the system that there is a new network
+     * element that has been identified on the network. This event starts the
+     * processes of identifying the node type with which the network element
+     * is associated, as well as synchronization of its configuration /
+     * inventory information.
+     *
+     * Plugins will listen to this notification and will try to contact the node
+     * using the provided IP, username and password.
+     */
+    notification new-network-element {
+        description "A new network element is available to be discovered";
+        uses discovery-header;
+        uses network-element-details;
+    }
+
+    /*
+     *  GUI calls this rpc to pass on the Network Element parameters
+     *  to Discovery manager for identification and syncing.
+     *
+     */
+    rpc discover-network-element {
+        description "Network element IP, Type, username, password";
+        input {
+            uses discovery-header;
+            uses network-element-details;
+        }
+        output {
+            uses discovery-header;
+            leaf result {
+                description "success/failure";
+                type boolean;
+            }
+        }
+    }
+}

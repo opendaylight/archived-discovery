@@ -1,0 +1,65 @@
+/*
+ * Copyright (c) 2014 Ciena Corporation and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+module discovery-identification {
+    namespace "urn:opendaylight:discovery:identification";
+    prefix "identification";
+
+    import yang-ext { prefix ext; }
+    import discovery { prefix discovery; }
+
+    organization "Opedaylight";
+    contact "opendaylight-dev@opendaylight.org";
+    description
+        "Provides RPCs and notifications required to support discovery,
+        synchronization, and reconciliation of the network model. This
+        module defines the notifications used in the process to identify
+        the node type associated to a network element.";
+
+    revision "2014-07-14" {
+        description "Initial revision";
+    }
+
+    /*
+     * Used to inform listeners that a new network element has been
+     * associated with a node type and added to inventory. At the point that
+     * this notification is sent the network element has not been synchronized,
+     * i.e. its configucation has not been loaded, it has simply been
+     * assigned a node type.
+     */
+    notification network-element-identified {
+        uses discovery:discovery-header;
+        leaf node-id {
+            type string;
+            mandatory false;
+        }
+        uses discovery:network-element-details;
+    }
+
+    notification network-element-in-process {
+        uses discovery:discovery-header;
+        uses discovery:network-element-details;
+        leaf current-state {
+            type discovery:state;
+        }
+    }
+
+    /*
+     * Used to inform listeners that a new network element was not able to be identified
+     * along with the reasons it was not able to be identified, such as time out, or
+     * no known connector.
+     */
+    notification unable-to-identify-network-element {
+        uses discovery:discovery-header;
+        uses discovery:network-element-details;
+        leaf cause {
+            type string;
+            mandatory true;
+            description "The cause or reason this network element was not able to be identified.";
+        }
+    }
+}

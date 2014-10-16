@@ -2,6 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.opendaylight.discovery</groupId>
         <artifactId>parent</artifactId>
@@ -9,8 +10,7 @@
         <relativePath>../..</relativePath>
     </parent>
 
-    <groupId>org.opendaylight.discovery.samples</groupId>
-    <artifactId>device-provider</artifactId>
+    <artifactId>discovery-provider</artifactId>
     <packaging>bundle</packaging>
 
     <build>
@@ -22,20 +22,19 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>org.opendaylight.discovery.config.device_provider.impl</Export-Package>
+                        <Export-Package>org.opendaylight.discovery.config.discovery_provider.impl</Export-Package>
                         <Import-Package>*</Import-Package>
                     </instructions>
                     <manifestLocation>${project.build.directory}/META-INF</manifestLocation>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.opendaylight.yangtools</groupId>
                 <artifactId>yang-maven-plugin</artifactId>
                 <version>${yangtools.version}</version>
                 <executions>
                     <execution>
-                        <id>generation</id>
+                        <id>config</id>
                         <goals>
                             <goal>generate-sources</goal>
                         </goals>
@@ -45,7 +44,7 @@
                                     <codeGeneratorClass>org.opendaylight.controller.config.yangjmxgenerator.plugin.JMXGenerator</codeGeneratorClass>
                                     <outputBaseDir>${generatedConfigPath}</outputBaseDir>
                                     <additionalConfiguration>
-                                        <namespaceToPackage1>urn:opendaylight:params:xml:ns:yang:controller:config:device-provider==org.opendaylight.discovery.config.device_provider</namespaceToPackage1>
+                                        <namespaceToPackage1>urn:opendaylight:params:xml:ns:yang:controller:config:discovery-provider==org.opendaylight.discovery.config.discovery_provider</namespaceToPackage1>
                                         <namespaceToPackage2>urn:opendaylight:params:xml:ns:yang:controller==org.opendaylight.controller.config.yang</namespaceToPackage2>
                                     </additionalConfiguration>
                                 </generator>
@@ -53,16 +52,11 @@
                                     <codeGeneratorClass>org.opendaylight.yangtools.maven.sal.api.gen.plugin.CodeGeneratorImpl</codeGeneratorClass>
                                     <outputBaseDir>${generatedSalPath}</outputBaseDir>
                                 </generator>
-                                <generator>
-                                    <codeGeneratorClass>org.opendaylight.yangtools.yang.unified.doc.generator.maven.DocumentationGeneratorImpl</codeGeneratorClass>
-                                    <outputBaseDir>${generatedDocPath}</outputBaseDir>
-                                </generator>
                             </codeGenerators>
                             <inspectDependencies>true</inspectDependencies>
                         </configuration>
                     </execution>
                 </executions>
-
                 <dependencies>
                     <dependency>
                         <groupId>org.opendaylight.yangtools</groupId>
@@ -79,6 +73,7 @@
             </plugin>
         </plugins>
     </build>
+
     <dependencies>
         <dependency>
             <groupId>org.opendaylight.discovery</groupId>
@@ -144,5 +139,11 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
 </project>

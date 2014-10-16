@@ -10,7 +10,7 @@
         <relativePath></relativePath>
     </parent>
 
-    <groupId>org.opendaylight.lifecycle</groupId>
+    <groupId>org.opendaylight.discovery</groupId>
     <artifactId>parent</artifactId>
     <version>0.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -151,10 +151,10 @@
                 <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
                 <plugin>
                     <groupId>org.eclipse.m2e</groupId>
-                    <artifactId>lifecycle-mapping</artifactId>
+                    <artifactId>discovery-mapping</artifactId>
                     <version>1.0.0</version>
                     <configuration>
-                        <lifecycleMappingMetadata>
+                        <discoveryMappingMetadata>
                             <pluginExecutions>
                                 <pluginExecution>
                                     <pluginExecutionFilter>
@@ -176,7 +176,7 @@
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
-                        </lifecycleMappingMetadata>
+                        </discoveryMappingMetadata>
                     </configuration>
                 </plugin>
             </plugins>
@@ -215,7 +215,7 @@
 
     <modules>
         <module>model</module>
-        <module>provider/lifecycle</module>
+        <module>provider/discovery</module>
         <module>samples/device</module>
     </modules>
 
