@@ -3,4 +3,5 @@
 .classpath
 target
 .externalToolBuilders
+.gitignore
 maven-eclipse.xml

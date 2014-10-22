@@ -11,6 +11,7 @@ import org.opendaylight.controller.config.api.ModuleIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RpcRegistration;
+import org.opendaylight.discovery.providers.communication.CommunicationProvider;
 import org.opendaylight.discovery.providers.identification.IdentificationProvider;
 import org.opendaylight.discovery.providers.reconciliation.ReconciliationProvider;
 import org.opendaylight.discovery.providers.state.StateProvider;
@@ -79,6 +80,11 @@ public class DiscoveryProviderModule extends AbstractDiscoveryProviderModule {
 
         final ReconciliationProvider reconciliationProvider = new ReconciliationProvider();
 
+        final CommunicationProvider communicationProvider = new CommunicationProvider(
+                getNotificationServiceDependency());
+        final ListenerRegistration<NotificationListener> communicationNotificationReg = getNotificationServiceDependency()
+                .registerNotificationListener(communicationProvider);
+
         /*
          * Wrap AutoCloseable and close registrations to md-sal at close()
          */
@@ -118,9 +124,18 @@ public class DiscoveryProviderModule extends AbstractDiscoveryProviderModule {
                     }
                 }
 
+                if (communicationNotificationReg != null) {
+                    try {
+                        communicationNotificationReg.close();
+                    } catch (Exception e) {
+                        log.error("Unable to close discovery communication provider notification registration");
+                    }
+                }
+
                 stateProvider.close();
                 identificationProvider.close();
                 synchronizationProvider.close();
+                communicationProvider.close();
                 reconciliationProvider.close();
 
                 if (log.isDebugEnabled()) {

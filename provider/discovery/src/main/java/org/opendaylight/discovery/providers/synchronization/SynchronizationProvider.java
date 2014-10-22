@@ -11,6 +11,9 @@ import java.util.concurrent.Executors;
 
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.communication.rev141020.DiscoveryCommunicationListener;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.communication.rev141020.NetworkElementCommunicationDown;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.communication.rev141020.NetworkElementCommunicationRestored;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.DiscoveryIdentificationListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.NetworkElementIdentified;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.NetworkElementInProcess;
@@ -21,16 +24,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization.r
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * OSGi/ODL Activator that registers handlers for notifications pertaining to network elements being identified. If a
- * network element is identified then the handler queues up a request to synchronize the network element. If a network
- * element fails to be identified then an error message is logged.
- *
- * @author David Bainbridge <dbainbri@ciena.com>
- * @since 2014-07-15
- */
 public class SynchronizationProvider implements DiscoveryIdentificationListener, DiscoverySynchronizationListener,
-        AutoCloseable {
+        DiscoveryCommunicationListener, AutoCloseable {
     private static Logger log = LoggerFactory.getLogger(SynchronizationProvider.class);
     private final ExecutorService executor;
     private final NotificationProviderService notificationProviderService;
@@ -88,6 +83,29 @@ public class SynchronizationProvider implements DiscoveryIdentificationListener,
     @Override
     public void onNetworkElementSynchronized(NetworkElementSynchronized notification) {
         // no op
+    }
+
+    @Override
+    public void onNetworkElementCommunicationDown(NetworkElementCommunicationDown notification) {
+        /*
+         * No op - need this method to support ODL, which can't deal with implementing only some notification handlers
+         */
+    }
+
+    @Override
+    public void onNetworkElementCommunicationRestored(NetworkElementCommunicationRestored notification) {
+        /*
+         * Network element Communication has been restored (existence), its data needs to be resynchronized with the
+         * network element.
+         *
+         * TODO: We need to put some sort check here about synchronization, so that in a case of flapping communication
+         * we don't repeatedly attempt to synchronize a network element.
+         */
+        log.debug("EVENT : NetworkElementCommunicationRestored : RECEIVED : {}, {}, {}", notification.getRequestId(),
+                notification.getNetworkElementIp(), notification.getNetworkElementType());
+        executor.submit(new SynchronizationJob(rpcRegistry, notificationProviderService, notification));
+        log.debug("JOB : synchronization : SUMMITED : {}, {}, {}", notification.getRequestId(),
+                notification.getNetworkElementIp(), notification.getNetworkElementType());
     }
 
     /*
