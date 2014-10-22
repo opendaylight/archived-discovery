@@ -102,6 +102,7 @@ public class IdentificationProvider implements DiscoveryListener, DiscoveryServi
         NetworkElementInProcessBuilder neipBuilder = null;
         switch (state) {
         case Unknown:
+        case Unidentified:
             /*
              * If the state is unknown that means that this device has not entered the discovery process yet and a
              * record needs to be created and pushed to the store.
