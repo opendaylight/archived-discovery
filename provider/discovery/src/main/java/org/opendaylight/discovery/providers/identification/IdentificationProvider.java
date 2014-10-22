@@ -6,12 +6,15 @@
  */
 package org.opendaylight.discovery.providers.identification;
 
+import java.math.BigInteger;
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.Future;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
+import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.discovery.NEID;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.provider.rev140714.IdentifyNetworkElementBuilder;
@@ -27,6 +30,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NewNetw
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NewNetworkElementBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.State;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.discovery.states.DiscoveryState;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.discovery.states.DiscoveryStateBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.discovery.states.DiscoveryStateKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier.InstanceIdentifierBuilder;
@@ -36,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -84,63 +89,65 @@ public class IdentificationProvider implements DiscoveryListener, DiscoveryServi
 
         final InstanceIdentifierBuilder<DiscoveryState> id = InstanceIdentifier.builder(DiscoveryStates.class).child(
                 DiscoveryState.class, new DiscoveryStateKey(neId.getValue()));
+
         State state = null;
-        try (ReadOnlyTransaction ro = dataBroker.newReadOnlyTransaction()) {
-            ListenableFuture<Optional<DiscoveryState>> data = ro.read(LogicalDatastoreType.OPERATIONAL, id.build());
-            Optional<DiscoveryState> result = data.get();
+        ReadWriteTransaction rw = null;
+        boolean alreadyDiscovered = false;
+        try {
+            rw = dataBroker.newReadWriteTransaction();
+
+            final ListenableFuture<Optional<DiscoveryState>> data = rw.read(LogicalDatastoreType.OPERATIONAL,
+                    id.build());
+            final Optional<DiscoveryState> result = data.get();
             if (result.isPresent()) {
+                /*
+                 * If there is already a record in the data store than this network element is already discovered
+                 */
+                alreadyDiscovered = true;
                 state = result.get().getState();
                 log.debug("READ state of {} is {}", neId.getValue(), state);
+                rw.cancel();
+                rw = null;
             } else {
-                state = State.Unknown;
+                state = State.Unidentified;
+                DiscoveryStateBuilder s = new DiscoveryStateBuilder();
+                s.setState(state);
+                s.setTimestamp(BigInteger.valueOf(new Date().getTime()));
+                s.setId(neId.getValue());
+                rw.merge(LogicalDatastoreType.OPERATIONAL, id.build(), s.build());
+                CheckedFuture<Void, TransactionCommitFailedException> sync = rw.submit();
+                sync.checkedGet();
+                rw = null;
             }
         } catch (Exception e) {
+            /*
+             * We were not able to read or write the state of this network element, therefore the discovery state is not
+             * known.
+             */
+            log.warn("Unable to determine the discovery state of the network element identified by {}"
+                    + " because of the error {} : {}, will default in an attempt to discover network element",
+                    notification.getNetworkElementIp(), e.getClass().getName(), e.getMessage());
             state = State.Unknown;
+            e.printStackTrace();
+        } finally {
+            if (rw != null) {
+                rw.cancel();
+            }
         }
-        log.debug("STATE {}", state);
+        log.debug("STATE {}, alreadyDiscovered {}", state, alreadyDiscovered);
 
         NetworkElementInProcessBuilder neipBuilder = null;
-        switch (state) {
-        case Unknown:
+
+        /*
+         * If this network element has already been discovered, the what happens to it depends on policy, i.e. do we
+         * attempt to re-discover it or just drop the request.
+         */
+        if (alreadyDiscovered) {
             /*
-             * If the state is unknown that means that this device has not entered the discovery process yet and a
-             * record needs to be created and pushed to the store.
-             */
-            break;
-        case Discovered:
-            /*
-             * If this device has already been discovered, then we really just need to synchronize the data from the
-             * network at this point. We do want to look at the timestamp of the last state change because it is
-             * possible that it was discovered not too long ago, and if so we may not want to rediscover it quite so
-             * soon.
-             */
-            neipBuilder = new NetworkElementInProcessBuilder();
-            neipBuilder.setCurrentState(state);
-            neipBuilder.setNetworkElementIp(notification.getNetworkElementIp());
-            neipBuilder.setNetworkElementType(notification.getNetworkElementType());
-            neipBuilder.setRequestId(reqId);
-            log.debug("EVENT : NetworkElementInProcess : PUBLISH : {}, {}, {}, {}", neipBuilder.getRequestId(),
-                    neipBuilder.getNetworkElementIp(), neipBuilder.getNetworkElementType(),
-                    neipBuilder.getCurrentState());
-            notificationProviderService.publish(neipBuilder.build());
-            return;
-        case DiscoveryFailed:
-        case IdentificationFailed:
-        case SynchronizationFailed:
-            neipBuilder = new NetworkElementInProcessBuilder();
-            neipBuilder.setCurrentState(state);
-            neipBuilder.setNetworkElementIp(notification.getNetworkElementIp());
-            neipBuilder.setNetworkElementType(notification.getNetworkElementType());
-            neipBuilder.setRequestId(reqId);
-            log.debug("EVENT : NetworkElementInProcess : PUBLISH : {}, {}, {}, {}", neipBuilder.getRequestId(),
-                    neipBuilder.getNetworkElementIp(), neipBuilder.getNetworkElementType(),
-                    neipBuilder.getCurrentState());
-            notificationProviderService.publish(neipBuilder.build());
-            return;
-        default:
-            /*
-             * Any other state and we are in the process of discovering the device, so we need to just punt and publish
-             * that it is already being processed.
+             * For now the policy will be be if it has already been discovered then we will drop the request and send an
+             * in process notification.
+             *
+             * TODO: Implement a policy enforcement point
              */
             neipBuilder = new NetworkElementInProcessBuilder();
             neipBuilder.setCurrentState(state);

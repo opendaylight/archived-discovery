@@ -12,6 +12,7 @@ import java.util.Date;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.discovery.NEID;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.provider.rev140714.IdentifyNetworkElement;
@@ -35,6 +36,8 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier.InstanceIdentifierBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.util.concurrent.CheckedFuture;
 
 /**
  * OSGi/ODL Activator that registers handlers for notifications pertaining to network elements being identified. If a
@@ -76,24 +79,32 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
                 DiscoveryState.class, new DiscoveryStateKey(neId.getValue()));
         final ReadWriteTransaction wo = dataBroker.newReadWriteTransaction();
         wo.merge(LogicalDatastoreType.OPERATIONAL, id.build(), state.build());
-        wo.submit();
+        CheckedFuture<Void, TransactionCommitFailedException> sync = wo.submit();
+        try {
+            sync.checkedGet();
+        } catch (TransactionCommitFailedException e) {
+            log.error(String.format("Error while attempting to persist status update for request {}, to status {}",
+                    builder.getRequestId(), builder.getToState()), e);
+        }
         log.debug("STORE : PUT : /discovery-states/discovery-state/{} : {}", neId.getValue(), builder.getToState());
         log.debug("TRANSITION: from {} to {} @ {}", builder.getFromState(), builder.getToState(),
                 builder.getTimestamp());
     }
 
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.DiscoveryListener#onNewNetworkElement(
+     * NewNetworkElement)
+     */
     @Override
     public void onNewNetworkElement(NewNetworkElement notification) {
-        DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
-        builder.setFromState(State.Unknown);
-        builder.setToState(State.Unidentified);
-        builder.setNetworkElementIp(notification.getNetworkElementIp());
-        builder.setNetworkElementType(notification.getNetworkElementType());
-        builder.setTimestamp(BigInteger.valueOf(new Date().getTime()));
-        //updateState(builder);
-        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}", builder.getRequestId(),
-                builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState());
-        notificationProviderService.publish(builder.build());
+        /*
+         * This notification is not handle by the state manager because it is the notification that initiates the
+         * process, thus it is the initial state and will be handled by the identity manager. This eliminates a race
+         * condition between the state manager and the identity manager as to which reads and / or writes the the
+         * initial state in the data store.
+         */
     }
 
     /*
@@ -127,12 +138,19 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
      */
     @Override
     public void onNetworkElementIdentified(NetworkElementIdentified notification) {
+        /*
+         * This will be a no-op for status updates as this notification is really the entry point into the discovery
+         * system. This notification will be handled by the identity handler.
+         */
         DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
         builder.setFromState(State.Identifying);
         builder.setToState(State.Synchronizing);
         builder.setNetworkElementIp(notification.getNetworkElementIp());
         builder.setNetworkElementType(notification.getNetworkElementType());
         builder.setTimestamp(BigInteger.valueOf(new Date().getTime()));
+        /*
+         * Unlike the other notifications handlers we don't update
+         */
         updateState(builder);
         log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}", builder.getRequestId(),
                 builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState());
