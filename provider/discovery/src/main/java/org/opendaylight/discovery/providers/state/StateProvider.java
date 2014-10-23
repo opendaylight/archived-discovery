@@ -148,9 +148,6 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
         builder.setNetworkElementIp(notification.getNetworkElementIp());
         builder.setNetworkElementType(notification.getNetworkElementType());
         builder.setTimestamp(BigInteger.valueOf(new Date().getTime()));
-        /*
-         * Unlike the other notifications handlers we don't update
-         */
         updateState(builder);
         log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}", builder.getRequestId(),
                 builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState());
