@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba8cc1f7_922b1a30",
+        "filename": "provider/discovery/src/main/java/org/opendaylight/discovery/providers/state/StateProvider.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 2856
+      },
+      "writtenOn": "2014-10-23T17:33:38Z",
+      "side": 1,
+      "message": "Comment says we don\u0027t update here, but there is still an updateState(builder) after that",
+      "revId": "496ed42b66d60e046b17f208d91a72c60330813c",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}
