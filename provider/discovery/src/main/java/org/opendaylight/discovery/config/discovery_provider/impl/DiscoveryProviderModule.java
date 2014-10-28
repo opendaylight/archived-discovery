@@ -19,8 +19,12 @@ import org.opendaylight.discovery.providers.synchronization.SynchronizationProvi
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.DiscoveryService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.DiscoveryStates;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.DiscoveryStatesBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.IpToNodeIds;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.IpToNodeIdsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NetworkElementTypes;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NetworkElementTypesBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NodeIdToStates;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NodeIdToStatesBuilder;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier.InstanceIdentifierBuilder;
@@ -61,10 +65,18 @@ public class DiscoveryProviderModule extends AbstractDiscoveryProviderModule {
         wo.merge(LogicalDatastoreType.OPERATIONAL, neTypeContainer.build(), neTypes.build());
         wo.submit();
 
-        final StateProvider stateProvider = new StateProvider(getNotificationServiceDependency(),
-                getDataBrokerDependency());
-        final ListenerRegistration<NotificationListener> stateNotificationReg = getNotificationServiceDependency()
-                .registerNotificationListener(stateProvider);
+        final InstanceIdentifierBuilder<NodeIdToStates> nodeIdToGuidContainer = InstanceIdentifier
+                .builder(NodeIdToStates.class);
+        NodeIdToStatesBuilder nodeIdToGuid = new NodeIdToStatesBuilder();
+        wo = getDataBrokerDependency().newReadWriteTransaction();
+        wo.merge(LogicalDatastoreType.OPERATIONAL, nodeIdToGuidContainer.build(), nodeIdToGuid.build());
+        wo.submit();
+
+        final InstanceIdentifierBuilder<IpToNodeIds> ipToGuidContainer = InstanceIdentifier.builder(IpToNodeIds.class);
+        IpToNodeIdsBuilder ipToGuid = new IpToNodeIdsBuilder();
+        wo = getDataBrokerDependency().newReadWriteTransaction();
+        wo.merge(LogicalDatastoreType.OPERATIONAL, ipToGuidContainer.build(), ipToGuid.build());
+        wo.submit();
 
         final IdentificationProvider identificationProvider = new IdentificationProvider(
                 getNotificationServiceDependency(), getDataBrokerDependency());
@@ -74,9 +86,15 @@ public class DiscoveryProviderModule extends AbstractDiscoveryProviderModule {
                 DiscoveryService.class, identificationProvider);
 
         final SynchronizationProvider synchronizationProvider = new SynchronizationProvider(
-                getNotificationServiceDependency(), getRpcRegistryDependency(), getSynchronizationThreadPoolSize());
+                getNotificationServiceDependency(), getRpcRegistryDependency(), getSynchronizationThreadPoolSize(),
+                getDataBrokerDependency());
         final ListenerRegistration<NotificationListener> synchronizationNotificationReg = getNotificationServiceDependency()
                 .registerNotificationListener(synchronizationProvider);
+
+        final StateProvider stateProvider = new StateProvider(getNotificationServiceDependency(),
+                getDataBrokerDependency());
+        final ListenerRegistration<NotificationListener> stateNotificationReg = getNotificationServiceDependency()
+                .registerNotificationListener(stateProvider);
 
         final ReconciliationProvider reconciliationProvider = new ReconciliationProvider();
 

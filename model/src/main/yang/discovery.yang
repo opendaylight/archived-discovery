@@ -55,13 +55,39 @@ module discovery {
             enum unmanaged {
                 value 8;
             }
+            enum deleting {
+            	value 9;
+            }
+            enum deleted {
+            	value 10;
+            }
+            enum delettion-failed {
+            	value 11;
+            }
+            enum duplicate-request {
+            	value 12;
+            }
+            enum duplicate-identity {
+            	value 13;
+            }
         }
     }
 
+   
+    
     grouping discovery-header {
         leaf request-id {
             type string;
         }
+    }
+    
+    grouping node-id-header {  
+        leaf node-id {
+        	type string;
+        	description "Node ID of the NE";
+        	mandatory false;
+        }
+        description "Used once node-id becomes available to Discovery Manager and used for Deletion flow";
     }
 
     grouping network-element-details {
@@ -105,12 +131,21 @@ module discovery {
         }
     }
 
+
     container discovery-states {
-        config false;
+    	config false;
         list discovery-state {
-            key "id";
-            leaf id {
-                type string;
+            key "request-id";
+            ordered-by system;
+            leaf request-id {
+            	type string;
+            }
+            leaf network-element-ip {
+            	type string;
+            }
+            leaf node-id {
+            	type string;
+            	mandatory false;
             }
             leaf state {
                 type state;
@@ -119,6 +154,35 @@ module discovery {
                 type uint64;
             }
         }
+    }
+    
+    container node-id-to-states {
+    	config false;
+    	list node-id-to-state {
+        	ordered-by system;
+    		key "node-id";
+    		leaf node-id {
+    			type string;
+    		}
+    		 leaf state {
+    			 type state;
+    			 
+    		}
+    	}
+    }
+    
+    container ip-to-node-ids {
+    	config false;
+    	list ip-to-node-id {
+    		ordered-by system;
+    		key "network-element-ip";
+    		leaf network-element-ip {
+    			type string;
+    		}
+    		 leaf node-id {
+    			 type string;
+    		}
+    	}
     }
 
     /*
@@ -134,6 +198,7 @@ module discovery {
     notification new-network-element {
         description "A new network element is available to be discovered";
         uses discovery-header;
+        uses node-id-header;
         uses network-element-details;
     }
 

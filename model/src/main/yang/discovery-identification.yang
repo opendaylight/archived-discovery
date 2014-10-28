@@ -33,10 +33,7 @@ module discovery-identification {
      */
     notification network-element-identified {
         uses discovery:discovery-header;
-        leaf node-id {
-            type string;
-            mandatory false;
-        }
+		uses discovery:node-id-header;
         uses discovery:network-element-details;
     }
 
@@ -47,6 +44,24 @@ module discovery-identification {
             type discovery:state;
         }
     }
+    
+    /*
+     *Notification for a duplicate request if a discover-ne RPC is sent for the same IP that's already in discovery
+     */
+    notification duplicate-request {
+        uses discovery:discovery-header;
+    	uses discovery:node-id-header;
+        uses discovery:network-element-details;
+    }
+
+    /*
+     *Notification for a duplicate identity if a discover-ne RPC is sent for the same NE (from a different IP) that's already in discovery
+     */
+    notification duplicate-identity {
+    	uses discovery:discovery-header;
+		uses discovery:node-id-header;
+        uses discovery:network-element-details;
+    }
 
     /*
      * Used to inform listeners that a new network element was not able to be identified
@@ -55,6 +70,7 @@ module discovery-identification {
      */
     notification unable-to-identify-network-element {
         uses discovery:discovery-header;
+        uses discovery:node-id-header;
         uses discovery:network-element-details;
         leaf cause {
             type string;

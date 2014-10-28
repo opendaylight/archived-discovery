@@ -14,6 +14,7 @@ import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.DiscoveryHeader;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NetworkElementDetails;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NetworkElementTypes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NodeIdHeader;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.network.element.types.NetworkElementType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.network.element.types.NetworkElementTypeKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714.DiscoverySynchronizationService;
@@ -80,7 +81,7 @@ public class SynchronizationJob implements Runnable {
     public void run() {
         DiscoveryHeader header = (DiscoveryHeader) notification;
         NetworkElementDetails details = (NetworkElementDetails) notification;
-
+        NodeIdHeader nidHeader = (NodeIdHeader) notification;
         try {
             log.debug("JOB : synchronization : RUN : {}, {}, {}", header.getRequestId(), details.getNetworkElementIp(),
                     details.getNetworkElementType());
@@ -115,8 +116,10 @@ public class SynchronizationJob implements Runnable {
                      * Plugin complete the synchronization work successfully. Publish the notification for the plugin
                      */
                     final NetworkElementSynchronized event = new NetworkElementSynchronizedBuilder().setChanges(true)
-                            .setRequestId(header.getRequestId()).setNetworkElementIp(details.getNetworkElementIp())
+                            .setRequestId(header.getRequestId()).setNodeId(nidHeader.getNodeId())
+                            .setNetworkElementIp(details.getNetworkElementIp())
                             .setNetworkElementType(details.getNetworkElementType()).build();
+
                     log.debug("EVENT : NetworkElementedSynchronized : PUBLISH : {}, {}, {}", event.getRequestId(),
                             event.getNetworkElementIp(), event.getNetworkElementType());
                     notificationService.publish(event);
@@ -136,8 +139,10 @@ public class SynchronizationJob implements Runnable {
                                 "Synchronization of network element, request {}, identified by {} of type {} failed, unknown reason",
                                 header.getRequestId(), details.getNetworkElementIp(), details.getNetworkElementType());
                         final NetworkElementSynchronizationFailure event = new NetworkElementSynchronizationFailureBuilder()
-                                .setRequestId(header.getRequestId()).setNetworkElementIp(details.getNetworkElementIp())
-                                .setNetworkElementType(details.getNetworkElementType()).setCause("unknown").build();
+                        .setRequestId(header.getRequestId()).setNodeId(nidHeader.getNodeId())
+                        .setNetworkElementIp(details.getNetworkElementIp())
+                        .setNetworkElementType(details.getNetworkElementType()).setCause("unknown").build();
+
                         log.debug("EVENT : NetworkElementSynchronizationFailure : PUBLISH : {}, {}, {}",
                                 event.getRequestId(), event.getNetworkElementIp(), event.getNetworkElementType());
                         notificationService.publish(event);
@@ -147,9 +152,10 @@ public class SynchronizationJob implements Runnable {
                                 "Synchronization of network element identified by {} of type {} failed, unknown reason",
                                 details.getNetworkElementIp(), details.getNetworkElementType());
                         final NetworkElementSynchronizationFailure event = new NetworkElementSynchronizationFailureBuilder()
-                                .setNetworkElementIp(details.getNetworkElementIp())
-                                .setNetworkElementType(details.getNetworkElementType()).setCause(failure.getCause())
-                                .build();
+                        .setNetworkElementIp(details.getNetworkElementIp()).setNodeId(nidHeader.getNodeId())
+                        .setNetworkElementType(details.getNetworkElementType()).setCause(failure.getCause())
+                        .build();
+
                         log.debug("EVENT : NetworkElementSynchronizationFailure : PUBLISH : {}, {}, {}",
                                 event.getRequestId(), event.getNetworkElementIp(), event.getNetworkElementType());
                         notificationService.publish(event);
@@ -164,9 +170,10 @@ public class SynchronizationJob implements Runnable {
                         header.getRequestId(), details.getNetworkElementIp(), details.getNetworkElementType(),
                         rpcresult.getErrors());
                 NetworkElementSynchronizationFailure event = new NetworkElementSynchronizationFailureBuilder()
-                        .setRequestId(header.getRequestId()).setNetworkElementIp(details.getNetworkElementIp())
-                        .setNetworkElementType(details.getNetworkElementType())
-                        .setCause(rpcresult.getErrors().toString()).build();
+                .setRequestId(header.getRequestId()).setNodeId(nidHeader.getNodeId())
+                .setNetworkElementIp(details.getNetworkElementIp())
+                .setNetworkElementType(details.getNetworkElementType())
+                .setCause(rpcresult.getErrors().toString()).build();
                 log.debug("EVENT : NetworkElementSynchronizationFailure : PUBLISH : {}, {}, {}", event.getRequestId(),
                         event.getNetworkElementIp(), event.getNetworkElementType());
                 notificationService.publish(event);
@@ -179,12 +186,13 @@ public class SynchronizationJob implements Runnable {
             log.error(
                     "Unable to synchronize network element, request {}, identified by {} of type {}, reported cause, {} : {}",
                     header.getRequestId(), details.getNetworkElementIp(), details.getNetworkElementType(), e.getClass()
-                            .getName(), e.getMessage());
+                    .getName(), e.getMessage());
             try {
                 NetworkElementSynchronizationFailure event = new NetworkElementSynchronizationFailureBuilder()
-                        .setRequestId(header.getRequestId()).setNetworkElementIp(details.getNetworkElementIp())
-                        .setNetworkElementType(details.getNetworkElementType())
-                        .setCause(String.format("%s : %s", e.getClass().getName(), e.getMessage())).build();
+                .setRequestId(header.getRequestId()).setNodeId(nidHeader.getNodeId())
+                .setNetworkElementIp(details.getNetworkElementIp())
+                .setNetworkElementType(details.getNetworkElementType())
+                .setCause(String.format("%s : %s", e.getClass().getName(), e.getMessage())).build();
                 log.debug("EVENT : NetworkElementSynchronizationFailure : PUBLISH : {}, {}, {}", event.getRequestId(),
                         event.getNetworkElementIp(), event.getNetworkElementType());
                 notificationService.publish(event);
@@ -192,7 +200,7 @@ public class SynchronizationJob implements Runnable {
                 log.error(
                         "Unable to publish synchronization fail of network element, request {}, identified by {} of type {}, reported cause, {} : {}",
                         header.getRequestId(), details.getNetworkElementIp(), details.getNetworkElementType(), e
-                                .getClass().getName(), e.getMessage());
+                        .getClass().getName(), e.getMessage());
             }
         }
     }

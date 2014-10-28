@@ -1,9 +1,8 @@
 /*
- * Copyright (c) 2014 Ciena Corporation and others.  All rights reserved.
+ * Copyright (c) 2014 Ciena Corporation and others. All rights reserved.
  *
- * This program and the accompanying materials are made available under the
- * terms of the Eclipse Public License v1.0 which accompanies this distribution,
- * and is available at http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 package org.opendaylight.discovery.samples.device;
 
@@ -39,7 +38,7 @@ import com.google.common.util.concurrent.Futures;
  * @since 2014-07-15
  */
 public class DeviceProvider implements DataChangeListener, DiscoveryIdentificationProviderListener,
-        DiscoverySynchronizationService, AutoCloseable {
+DiscoverySynchronizationService, AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(DeviceProvider.class);
 
     private final NotificationProviderService notificationProviderService;
@@ -71,11 +70,23 @@ public class DeviceProvider implements DataChangeListener, DiscoveryIdentificati
             if (sum % 2 == 0) {
                 NetworkElementIdentifiedBuilder builder = new NetworkElementIdentifiedBuilder();
                 builder.setRequestId(notification.getRequestId());
+
+                /*
+                 * This emulates IP 8.8.8.8 and 4.4.4.4 point to the same device thus return the same NodeID(aka unique
+                 * signature)
+                 */
+                if (notification.getNetworkElementIp().equals("8.8.8.8")
+                        || notification.getNetworkElementIp().equals("4.4.4.4")) {
+                    builder.setNodeId("ciena:SDN_NODE_ID_8.8.8.8_and_4.4.4.4_COMBINED_DEVICE");
+                } else {
+                    builder.setNodeId("ciena:SDN_NODE_ID_" + notification.getNetworkElementIp().toString());
+                }
                 builder.setNetworkElementIp(addr.getHostAddress());
                 builder.setNetworkElementType(DEVICE_TYPE_TAG);
-                log.debug("EVENT : NetworkElementIdentified : PUBLISH : {}, {}, {}", builder.getRequestId(),
-                        builder.getNetworkElementIp(), builder.getNetworkElementType());
-                notificationProviderService.publish(builder.build());
+                log.debug("EVENT : NetworkElementIdentified : PUBLISH : {}, {}, {}, Node-ID assigned: {}",
+                        builder.getRequestId(), builder.getNetworkElementIp(), builder.getNetworkElementType(),
+                        builder.getNodeId());
+                this.notificationProviderService.publish(builder.build());
             }
         } catch (Exception e) {
             log.error("ERROR PROCESSING IDENTIFICATION EVENT: {}, {}, {}", notification.getRequestId(), e.getClass()
@@ -86,10 +97,9 @@ public class DeviceProvider implements DataChangeListener, DiscoveryIdentificati
     /*
      * (non-Javadoc)
      *
-     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714.SynchronizationService#
-     * synchronizeNetworkElement
-     * (org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714.SynchronizeNetworkElementInput
-     * )
+     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization .rev140714.SynchronizationService#
+     * synchronizeNetworkElement (org.opendaylight .yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714
+     * .SynchronizeNetworkElementInput )
      */
     @Override
     public Future<RpcResult<SynchronizeNetworkElementOutput>> synchronizeNetworkElement(
@@ -98,6 +108,7 @@ public class DeviceProvider implements DataChangeListener, DiscoveryIdentificati
                 input.getNetworkElementIp(), input.getNetworkElementType());
         SynchronizeNetworkElementOutputBuilder builder = new SynchronizeNetworkElementOutputBuilder();
         builder.setRequestId(input.getRequestId());
+        builder.setNodeId(input.getNodeId());
         builder.setResult(new SuccessBuilder().setChanges(false).build());
         return Futures.immediateFuture(RpcResultBuilder.<SynchronizeNetworkElementOutput> success(builder.build())
                 .build());
@@ -106,39 +117,12 @@ public class DeviceProvider implements DataChangeListener, DiscoveryIdentificati
     /*
      * (non-Javadoc)
      *
-     * @see
-     * org.opendaylight.controller.md.sal.binding.api.DataChangeListener#onDataChanged(org.opendaylight.controller.md
-     * .sal.common.api.data.AsyncDataChangeEvent)
+     * @see org.opendaylight.controller.md.sal.binding.api.DataChangeListener#
+     * onDataChanged(org.opendaylight.controller.md .sal.common.api.data.AsyncDataChangeEvent)
      */
     @Override
     public void onDataChanged(AsyncDataChangeEvent<InstanceIdentifier<?>, DataObject> event) {
-        log.error("GOT DATA CHANGE EVENT");
-        // Map<InstanceIdentifier<?>, DataObject> data = event.getUpdatedData();
-        // if (data != null && data.values() != null) {
-        // for (DataObject dto : data.values()) {
-        // if (Device.class.isInstance(dto)) {
-        // Device device = (Device) dto;
-        // CompositeObjectRegistrationBuilder<SynchronizationService> cbuilder = CompositeObjectRegistration
-        // .<SynchronizationService> builderFor(this);
-        //
-        // NodeUpdatedBuilder builder = new NodeUpdatedBuilder();
-        // NodeId nodeId = new NodeId("FOOBAR_001");
-        // log.error("NODE ID: " + nodeId);
-        // NodeKey nodeKey = new NodeKey(nodeId);
-        // InstanceIdentifier<Node> identifier = InstanceIdentifier.builder(Nodes.class)
-        // .child(Node.class, nodeKey).toInstance();
-        // NodeRef nodeRef = new NodeRef(identifier);
-        // RoutedRpcRegistration<SynchronizationService> reg = context.addRoutedRpcImplementation(
-        // SynchronizationService.class, this);
-        // reg.registerPath(NodeContext.class, identifier);
-        // cbuilder.add(reg);
-        // builder.setId(nodeId);
-        // builder.setNodeRef(nodeRef);
-        // notificationService.publish(builder.build());
-        // log.error("PUBLISHED");
-        // }
-        // }
-        // }
+
     }
 
     /*

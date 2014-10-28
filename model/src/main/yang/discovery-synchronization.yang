@@ -31,10 +31,7 @@ module discovery-synchronization {
      */
     notification network-element-synchronized {
         uses discovery:discovery-header;
-        leaf node-id {
-            type string;
-            mandatory false;
-        }
+        uses discovery:node-id-header;
         uses discovery:network-element-details;
 
         leaf changes {
@@ -51,10 +48,7 @@ module discovery-synchronization {
      */
     notification network-element-synchronization-failure {
         uses discovery:discovery-header;
-        leaf node-id {
-            type string;
-            mandatory false;
-        }
+        uses discovery:node-id-header;
         uses discovery:network-element-details;
 
         leaf cause {
@@ -68,7 +62,7 @@ module discovery-synchronization {
      * should be implemented by node type support plugins to query data from
      * a network element and reconcile it into the controller's information
      * model.
-     */
+     */ 
     rpc synchronize-network-element {
         description "Network element IP, Type, username, password";
         input {
@@ -78,10 +72,12 @@ module discovery-synchronization {
                 ext:context-reference discovery:network-element-type-context;
                 mandatory true;
             }
+            uses discovery:node-id-header;
             uses discovery:network-element-details;
         }
         output {
             uses discovery:discovery-header;
+            uses discovery:node-id-header;
             choice result {
                 default failure;
                 case success {

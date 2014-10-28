@@ -14,21 +14,27 @@ import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
-import org.opendaylight.discovery.NEID;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.provider.rev140714.IdentifyNetworkElement;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.provider.rev140714.DiscoveryIdentificationProviderListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.DiscoveryIdentificationListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.NetworkElementIdentified;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.NetworkElementInProcess;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.UnableToIdentifyNetworkElement;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.DuplicateRequest;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.DuplicateIdentity;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.DiscoveryListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.DiscoveryStates;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NewNetworkElement;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NodeIdToStates;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.State;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.discovery.states.DiscoveryState;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.discovery.states.DiscoveryStateBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.discovery.states.DiscoveryStateKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.node.id.to.states.NodeIdToState;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.node.id.to.states.NodeIdToStateBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.node.id.to.states.NodeIdToStateKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.state.rev140714.DiscoveryStateChangeBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.state.rev140714.NodeStateChangeBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714.DiscoverySynchronizationListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714.NetworkElementSynchronizationFailure;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714.NetworkElementSynchronized;
@@ -48,7 +54,7 @@ import com.google.common.util.concurrent.CheckedFuture;
  * @since 2014-07-15
  */
 public class StateProvider implements DiscoveryListener, DiscoveryIdentificationProviderListener,
-        DiscoveryIdentificationListener, DiscoverySynchronizationListener, AutoCloseable {
+DiscoveryIdentificationListener, DiscoverySynchronizationListener, AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(StateProvider.class);
     private final NotificationProviderService notificationProviderService;
     private final DataBroker dataBroker;
@@ -69,14 +75,15 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
     }
 
     private synchronized void updateState(DiscoveryStateChangeBuilder builder) {
-        NEID neId = NEID.fromParts(builder.getNetworkElementIp(), builder.getNetworkElementType());
         DiscoveryStateBuilder state = new DiscoveryStateBuilder();
-        state.setId(neId.getValue());
+        state.setRequestId(builder.getRequestId());
+        state.setNetworkElementIp(builder.getNetworkElementIp());
+        state.setNodeId(builder.getNodeId());
         state.setState(builder.getToState());
         state.setTimestamp(builder.getTimestamp());
 
         final InstanceIdentifierBuilder<DiscoveryState> id = InstanceIdentifier.builder(DiscoveryStates.class).child(
-                DiscoveryState.class, new DiscoveryStateKey(neId.getValue()));
+                DiscoveryState.class, new DiscoveryStateKey(builder.getRequestId()));
         final ReadWriteTransaction wo = dataBroker.newReadWriteTransaction();
         wo.merge(LogicalDatastoreType.OPERATIONAL, id.build(), state.build());
         CheckedFuture<Void, TransactionCommitFailedException> sync = wo.submit();
@@ -86,9 +93,28 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
             log.error(String.format("Error while attempting to persist status update for request {}, to status {}",
                     builder.getRequestId(), builder.getToState()), e);
         }
-        log.debug("STORE : PUT : /discovery-states/discovery-state/{} : {}", neId.getValue(), builder.getToState());
-        log.debug("TRANSITION: from {} to {} @ {}", builder.getFromState(), builder.getToState(),
-                builder.getTimestamp());
+        log.debug("STORE : PUT : /discovery-states/discovery-state/{} : {} , {} , {}", builder.getRequestId(),
+                builder.getNetworkElementIp(), builder.getToState(), builder.getNodeId());
+        log.debug("TRANSITION: ReqID {} from {} to {} @ {}", builder.getRequestId(), builder.getFromState(),
+                builder.getToState(), builder.getTimestamp());
+    }
+
+    private synchronized void nodeUpdateState(NodeStateChangeBuilder builder) {
+        NodeIdToStateBuilder table = new NodeIdToStateBuilder();
+        table.setNodeId(builder.getNodeId());
+        table.setState(builder.getState());
+        final InstanceIdentifierBuilder<NodeIdToState> id = InstanceIdentifier.builder(NodeIdToStates.class).child(
+                NodeIdToState.class, new NodeIdToStateKey(builder.getNodeId()));
+        final ReadWriteTransaction wo = dataBroker.newReadWriteTransaction();
+        wo.merge(LogicalDatastoreType.OPERATIONAL, id.build(), table.build());
+        CheckedFuture<Void, TransactionCommitFailedException> sync = wo.submit();
+        try {
+            sync.checkedGet();
+        } catch (TransactionCommitFailedException e) {
+            log.error(String.format("Error while attempting to persist status update for request {}, to status {}",
+                    builder.getNodeId(), builder.getState()), e);
+        }
+        log.debug("STORE : PUT : /node-id-to-states/node-id-to-state/{} : {} ", builder.getNodeId(), builder.getState());
     }
 
     /*
@@ -118,14 +144,17 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
     @Override
     public void onIdentifyNetworkElement(IdentifyNetworkElement notification) {
         DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
+        builder.setRequestId(notification.getRequestId());
         builder.setFromState(State.Unidentified);
         builder.setToState(State.Identifying);
+        builder.setNodeId(notification.getNodeId());
         builder.setNetworkElementIp(notification.getNetworkElementIp());
         builder.setNetworkElementType(notification.getNetworkElementType());
         builder.setTimestamp(BigInteger.valueOf(new Date().getTime()));
         updateState(builder);
-        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}", builder.getRequestId(),
-                builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState());
+        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}, {}", builder.getRequestId(),
+                builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState(),
+                builder.getNodeId());
         notificationProviderService.publish(builder.build());
     }
 
@@ -138,20 +167,20 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
      */
     @Override
     public void onNetworkElementIdentified(NetworkElementIdentified notification) {
-        /*
-         * This will be a no-op for status updates as this notification is really the entry point into the discovery
-         * system. This notification will be handled by the identity handler.
-         */
         DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
+        builder.setRequestId(notification.getRequestId());
         builder.setFromState(State.Identifying);
         builder.setToState(State.Synchronizing);
+        builder.setNodeId(notification.getNodeId());
         builder.setNetworkElementIp(notification.getNetworkElementIp());
         builder.setNetworkElementType(notification.getNetworkElementType());
         builder.setTimestamp(BigInteger.valueOf(new Date().getTime()));
         updateState(builder);
-        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}", builder.getRequestId(),
-                builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState());
+        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}, {}", builder.getRequestId(),
+                builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState(),
+                builder.getNodeId());
         notificationProviderService.publish(builder.build());
+
     }
 
     /*
@@ -176,14 +205,17 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
     @Override
     public void onUnableToIdentifyNetworkElement(UnableToIdentifyNetworkElement notification) {
         DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
+        builder.setRequestId(notification.getRequestId());
         builder.setFromState(State.Identifying);
         builder.setToState(State.IdentificationFailed);
+        builder.setNodeId(notification.getNodeId());
         builder.setNetworkElementIp(notification.getNetworkElementIp());
         builder.setNetworkElementType(notification.getNetworkElementType());
         builder.setTimestamp(BigInteger.valueOf(new Date().getTime()));
         updateState(builder);
-        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}", builder.getRequestId(),
-                builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState());
+        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}, {}", builder.getRequestId(),
+                builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState(),
+                builder.getNodeId());
         notificationProviderService.publish(builder.build());
     }
 
@@ -198,15 +230,26 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
     @Override
     public void onNetworkElementSynchronizationFailure(NetworkElementSynchronizationFailure notification) {
         DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
+        builder.setRequestId(notification.getRequestId());
         builder.setFromState(State.Synchronizing);
         builder.setToState(State.SynchronizationFailed);
+        builder.setNodeId(notification.getNodeId());
         builder.setNetworkElementIp(notification.getNetworkElementIp());
         builder.setNetworkElementType(notification.getNetworkElementType());
         builder.setTimestamp(BigInteger.valueOf(new Date().getTime()));
         updateState(builder);
-        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}", builder.getRequestId(),
-                builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState());
+        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}, {}", builder.getRequestId(),
+                builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState(),
+                builder.getNodeId());
         notificationProviderService.publish(builder.build());
+
+        NodeStateChangeBuilder build2 = new NodeStateChangeBuilder();
+        build2.setNodeId(notification.getNodeId());
+        build2.setState(State.SynchronizationFailed);
+        nodeUpdateState(build2);
+        log.debug("EVENT : NodeStateChange : PUBLISH : {}, {}, {}, {}", build2.getNodeId(), build2.getState(),
+                builder.getRequestId(), builder.getNetworkElementIp());
+        notificationProviderService.publish(build2.build());
     }
 
     /*
@@ -219,14 +262,57 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
     @Override
     public void onNetworkElementSynchronized(NetworkElementSynchronized notification) {
         DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
+        builder.setRequestId(notification.getRequestId());
         builder.setFromState(State.Synchronizing);
         builder.setToState(State.Discovered);
+        builder.setNodeId(notification.getNodeId());
         builder.setNetworkElementIp(notification.getNetworkElementIp());
         builder.setNetworkElementType(notification.getNetworkElementType());
         builder.setTimestamp(BigInteger.valueOf(new Date().getTime()));
         updateState(builder);
-        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}", builder.getRequestId(),
-                builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState());
+        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}, {}", builder.getRequestId(),
+                builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState(),
+                builder.getNodeId());
         notificationProviderService.publish(builder.build());
+
+        NodeStateChangeBuilder build2 = new NodeStateChangeBuilder();
+        build2.setNodeId(notification.getNodeId());
+        build2.setState(State.Discovered);
+        nodeUpdateState(build2);
+        log.debug("EVENT : NodeStateChange : PUBLISH : {}, {}, {}, {}", build2.getNodeId(), build2.getState(),
+                builder.getRequestId(), builder.getNetworkElementIp());
+        notificationProviderService.publish(build2.build());
+    }
+
+    @Override
+    public void onDuplicateIdentity(DuplicateIdentity notification) {
+        DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
+        builder.setRequestId(notification.getRequestId());
+        builder.setFromState(State.Synchronizing);
+        builder.setToState(State.DuplicateIdentity);
+        builder.setNodeId(notification.getNodeId());
+        builder.setNetworkElementIp(notification.getNetworkElementIp());
+        builder.setTimestamp(BigInteger.valueOf(new Date().getTime()));
+        updateState(builder);
+        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}", builder.getRequestId(),
+                builder.getNetworkElementIp(), builder.getToState());
+        notificationProviderService.publish(builder.build());
+
+    }
+
+    @Override
+    public void onDuplicateRequest(DuplicateRequest notification) {
+        DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
+        builder.setRequestId(notification.getRequestId());
+        builder.setFromState(State.Unknown);
+        builder.setToState(State.DuplicateRequest);
+        builder.setNodeId(notification.getNodeId());
+        builder.setNetworkElementIp(notification.getNetworkElementIp());
+        builder.setTimestamp(BigInteger.valueOf(new Date().getTime()));
+        updateState(builder);
+        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}", builder.getRequestId(),
+                builder.getNetworkElementIp(), builder.getToState());
+        notificationProviderService.publish(builder.build());
+
     }
 }

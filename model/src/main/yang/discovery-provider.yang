@@ -30,6 +30,7 @@ module discovery-identification-provider {
      */
     notification identify-network-element {
         uses discovery:discovery-header;
+        uses discovery:node-id-header;
         uses discovery:network-element-details;
     }
 }

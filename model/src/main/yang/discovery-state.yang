@@ -32,6 +32,7 @@ module discovery-state {
      */
     notification discovery-state-change {
         uses discovery:discovery-header;
+        uses discovery:node-id-header;
         uses discovery:network-element-details;
         leaf from-state {
             type discovery:state;
@@ -42,5 +43,14 @@ module discovery-state {
         leaf timestamp {
             type uint64;
         }
+    }
+     /*
+      *This is to populate node-id-to-state table, it will only track device states, NOT request states
+      */
+    notification node-state-change {
+    	uses discovery:node-id-header;
+    	leaf state {
+    	     type discovery:state;
+    	}
     }
 }
