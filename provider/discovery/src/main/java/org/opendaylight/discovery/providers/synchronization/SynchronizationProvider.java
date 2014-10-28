@@ -23,7 +23,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.re
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.NetworkElementIdentified;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.NetworkElementInProcess;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.UnableToIdentifyNetworkElement;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.DuplicateRequest;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.DuplicateIdentity;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.IpToNodeIds;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NodeIdToStates;
@@ -127,6 +126,7 @@ DiscoveryCommunicationListener, AutoCloseable {
                     NodeIdToStateBuilder table = new NodeIdToStateBuilder();
                     table.setNodeId(notification.getNodeId());
                     table.setState(State.Synchronizing);
+                    table.setNetworkElementType(notification.getNetworkElementType());
                     final ReadWriteTransaction wo = dataBroker.newReadWriteTransaction();
                     wo.merge(LogicalDatastoreType.OPERATIONAL, id.build(), table.build());
                     wo.submit();
@@ -221,12 +221,6 @@ DiscoveryCommunicationListener, AutoCloseable {
 
     @Override
     public void onDuplicateIdentity(DuplicateIdentity notification) {
-        // no op
-
-    }
-
-    @Override
-    public void onDuplicateRequest(DuplicateRequest notification) {
         // no op
 
     }

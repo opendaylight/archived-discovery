@@ -7,7 +7,7 @@
  */
 module discovery {
     namespace "urn:opendaylight:discovery";
-    prefix "discovery";
+    prefix "discovery"; 
 
     import yang-ext { prefix ext; }
 
@@ -61,14 +61,11 @@ module discovery {
             enum deleted {
             	value 10;
             }
-            enum delettion-failed {
+            enum deletion-failed {
             	value 11;
             }
-            enum duplicate-request {
-            	value 12;
-            }
             enum duplicate-identity {
-            	value 13;
+            	value 12;
             }
         }
     }
@@ -84,8 +81,6 @@ module discovery {
     grouping node-id-header {  
         leaf node-id {
         	type string;
-        	description "Node ID of the NE";
-        	mandatory false;
         }
         description "Used once node-id becomes available to Discovery Manager and used for Deletion flow";
     }
@@ -168,6 +163,11 @@ module discovery {
     			 type state;
     			 
     		}
+    		 leaf network-element-type {
+    	         type string;
+    	         description "Node type of NE if known";
+    	         mandatory false;
+    	        }
     	}
     }
     
@@ -221,4 +221,27 @@ module discovery {
             }
         }
     }
+    
+    
+
+   /*
+    *  RPC call to remove the device, GUI calls this with node-ID and IP (will make IP optional later) 
+  	*
+  	*/
+      rpc remove-network-element {
+          description "Network element IP, node ID, Type, username, password";
+          input {
+              uses discovery-header;
+              uses node-id-header;
+              uses network-element-details;
+          }
+          output {
+              uses discovery-header;
+              leaf result {
+                  description "success/failure";
+                  type boolean;
+              }
+          }
+      }
+
 }

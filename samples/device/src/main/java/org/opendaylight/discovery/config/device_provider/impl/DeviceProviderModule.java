@@ -11,6 +11,7 @@ import org.opendaylight.controller.config.api.ModuleIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RoutedRpcRegistration;
 import org.opendaylight.discovery.samples.device.DeviceProvider;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.deletion.rev140714.DiscoveryDeletionService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NetworkElementTypeContext;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NetworkElementTypes;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.network.element.types.NetworkElementType;
@@ -26,6 +27,7 @@ public class DeviceProviderModule extends AbstractDeviceProviderModule {
     private static Logger log = LoggerFactory.getLogger(DeviceProviderModule.class);
     private ListenerRegistration<NotificationListener> notificationReg = null;
     private RoutedRpcRegistration<DiscoverySynchronizationService> rpcReg = null;
+    private RoutedRpcRegistration<DiscoveryDeletionService> rpcReg2 = null;
     private ListenerRegistration<DataChangeListener> dataReg = null;
 
     public DeviceProviderModule(ModuleIdentifier identifier, DependencyResolver dependencyResolver) {
@@ -50,6 +52,7 @@ public class DeviceProviderModule extends AbstractDeviceProviderModule {
                 .builder(NetworkElementTypes.class)
                 .child(NetworkElementType.class, new NetworkElementTypeKey(DeviceProvider.DEVICE_TYPE_TAG)).build();
         rpcReg = getRpcRegistryDependency().addRoutedRpcImplementation(DiscoverySynchronizationService.class, provider);
+        rpcReg2 = getRpcRegistryDependency().addRoutedRpcImplementation(DiscoveryDeletionService.class, provider);
 
         // InstanceIdentifier<NetworkElementType> DEVICE_TYPE_ID = InstanceIdentifier.create(NetworkElementTypes.class)
         // .child(NetworkElementType.class, new NetworkElementTypeKey("SAMPLE"));
@@ -58,6 +61,7 @@ public class DeviceProviderModule extends AbstractDeviceProviderModule {
         // NetworkElementTypes.class).child(NetworkElementType.class,
         // new NetworkElementTypeKey(DeviceProvider.DEVICE_TYPE_TAG));
         rpcReg.registerPath(NetworkElementTypeContext.class, DEVICE_TYPE_ID);
+        rpcReg2.registerPath(NetworkElementTypeContext.class, DEVICE_TYPE_ID);
 
         /*
          * Wrap AutoCloseable and close registrations to md-sal at close()
@@ -83,6 +87,16 @@ public class DeviceProviderModule extends AbstractDeviceProviderModule {
                         log.error("Unable to close RPC registration");
                     } finally {
                         rpcReg = null;
+                    }
+                }
+
+                if (rpcReg2 != null) {
+                    try {
+                        rpcReg2.close();
+                    } catch (Exception e) {
+                        log.error("Unable to close RPC registration");
+                    } finally {
+                        rpcReg2 = null;
                     }
                 }
 

@@ -52,5 +52,8 @@ module discovery-state {
     	leaf state {
     	     type discovery:state;
     	}
+    	leaf network-element-type {
+    		type string;
+    	}
     }
 }

@@ -12,6 +12,7 @@ import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RpcRegistration;
 import org.opendaylight.discovery.providers.communication.CommunicationProvider;
+import org.opendaylight.discovery.providers.deletion.DeletionProvider;
 import org.opendaylight.discovery.providers.identification.IdentificationProvider;
 import org.opendaylight.discovery.providers.reconciliation.ReconciliationProvider;
 import org.opendaylight.discovery.providers.state.StateProvider;
@@ -103,6 +104,12 @@ public class DiscoveryProviderModule extends AbstractDiscoveryProviderModule {
         final ListenerRegistration<NotificationListener> communicationNotificationReg = getNotificationServiceDependency()
                 .registerNotificationListener(communicationProvider);
 
+        final DeletionProvider deletionProvider = new DeletionProvider(
+                getNotificationServiceDependency(), getRpcRegistryDependency(), getSynchronizationThreadPoolSize(),
+                getDataBrokerDependency());
+        final ListenerRegistration<NotificationListener> deletionNotificationReg = getNotificationServiceDependency()
+                .registerNotificationListener(deletionProvider);
+
         /*
          * Wrap AutoCloseable and close registrations to md-sal at close()
          */
@@ -150,11 +157,19 @@ public class DiscoveryProviderModule extends AbstractDiscoveryProviderModule {
                     }
                 }
 
+                if (deletionNotificationReg != null) {
+                    try {deletionNotificationReg.close();
+                    } catch (Exception e) {
+                        log.error("Unable to close discovery deletion provider notification registration");
+                    }
+                }
                 stateProvider.close();
                 identificationProvider.close();
                 synchronizationProvider.close();
                 communicationProvider.close();
                 reconciliationProvider.close();
+                deletionProvider.close();
+
 
                 if (log.isDebugEnabled()) {
                     log.debug("TEAR-DOWN : {}", Integer.toHexString(this.hashCode()));

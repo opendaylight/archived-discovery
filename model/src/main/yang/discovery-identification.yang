@@ -44,18 +44,10 @@ module discovery-identification {
             type discovery:state;
         }
     }
-    
-    /*
-     *Notification for a duplicate request if a discover-ne RPC is sent for the same IP that's already in discovery
-     */
-    notification duplicate-request {
-        uses discovery:discovery-header;
-    	uses discovery:node-id-header;
-        uses discovery:network-element-details;
-    }
 
     /*
      *Notification for a duplicate identity if a discover-ne RPC is sent for the same NE (from a different IP) that's already in discovery
+     *Notification for a duplicate request if a discover-ne RPC is sent for the same IP that's already in discovery
      */
     notification duplicate-identity {
     	uses discovery:discovery-header;
