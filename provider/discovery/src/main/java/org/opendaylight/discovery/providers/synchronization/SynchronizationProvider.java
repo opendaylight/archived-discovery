@@ -167,10 +167,12 @@ DiscoveryCommunicationListener, AutoCloseable {
 
     @Override
     public void onUnableToIdentifyNetworkElement(UnableToIdentifyNetworkElement notification) {
+        /*
+         * This notification can come from multiple device plugins and is not an error, just really them letting
+         * everyone know they cannot identify the device type. As such, log to debug the event.
+         */
         log.debug("EVENT : UnableToIdentifyNetworkElement : RECEIVED : {}, {}", notification.getRequestId(),
                 notification.getNetworkElementIp());
-        log.error("Unable to associate network element IP: {} with controller node type. CAUSE: {}",
-                notification.getNetworkElementIp(), notification.getCause());
     }
 
     @Override

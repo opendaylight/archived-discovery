@@ -205,19 +205,14 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
      */
     @Override
     public void onUnableToIdentifyNetworkElement(UnableToIdentifyNetworkElement notification) {
-        DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
-        builder.setRequestId(notification.getRequestId());
-        builder.setFromState(State.Identifying);
-        builder.setToState(State.IdentificationFailed);
-        builder.setNodeId(notification.getNodeId());
-        builder.setNetworkElementIp(notification.getNetworkElementIp());
-        builder.setNetworkElementType(notification.getNetworkElementType());
-        builder.setTimestamp(BigInteger.valueOf(new Date().getTime()));
-        updateState(builder);
-        log.debug("EVENT : DiscoveryStateChange : PUBLISH : {}, {}, {}, {}, {}", builder.getRequestId(),
-                builder.getNetworkElementIp(), builder.getNetworkElementType(), builder.getToState(),
-                builder.getNodeId());
-        notificationProviderService.publish(builder.build());
+        /*
+         * If there are 4 device plugins, then 3 may publish this notification and one may publish a success
+         * notification. As such, the reception of this notification really isn't an error or a state change this
+         * is really an informational message. As such the message will be logged, but no state change will take
+         * place.
+         */
+        log.debug("EVENT : UnableToIdentifyNetworkElement : RECEIVED : {}, {}", notification.getRequestId(),
+                notification.getNetworkElementIp());
     }
 
     /*
