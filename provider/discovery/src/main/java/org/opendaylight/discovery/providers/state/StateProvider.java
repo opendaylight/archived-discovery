@@ -54,7 +54,7 @@ import com.google.common.util.concurrent.CheckedFuture;
  * @since 2014-07-15
  */
 public class StateProvider implements DiscoveryListener, DiscoveryIdentificationProviderListener,
-DiscoveryIdentificationListener, DiscoverySynchronizationListener, AutoCloseable {
+        DiscoveryIdentificationListener, DiscoverySynchronizationListener, AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(StateProvider.class);
     private final NotificationProviderService notificationProviderService;
     private final DataBroker dataBroker;
@@ -186,8 +186,9 @@ DiscoveryIdentificationListener, DiscoverySynchronizationListener, AutoCloseable
     /*
      * (non-Javadoc)
      *
-     * @see org.opendaylight.yang.gen.v1.urn.ciena.discovery.identification.rev140714.IdentificationListener#
-     * onNetworkElementInProcess
+     * @see
+     * org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.DiscoveryIdentificationListener
+     * #onNetworkElementInProcess
      * (org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.NetworkElementInProcess)
      */
     @Override

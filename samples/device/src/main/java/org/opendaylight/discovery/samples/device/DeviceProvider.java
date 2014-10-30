@@ -77,9 +77,9 @@ DiscoverySynchronizationService, AutoCloseable {
                  */
                 if (notification.getNetworkElementIp().equals("8.8.8.8")
                         || notification.getNetworkElementIp().equals("4.4.4.4")) {
-                    builder.setNodeId("ciena:SDN_NODE_ID_8.8.8.8_and_4.4.4.4_COMBINED_DEVICE");
+                    builder.setNodeId("sample:SDN_NODE_ID_8.8.8.8_and_4.4.4.4_COMBINED_DEVICE");
                 } else {
-                    builder.setNodeId("ciena:SDN_NODE_ID_" + notification.getNetworkElementIp().toString());
+                    builder.setNodeId("sample:SDN_NODE_ID_" + notification.getNetworkElementIp().toString());
                 }
                 builder.setNetworkElementIp(addr.getHostAddress());
                 builder.setNetworkElementType(DEVICE_TYPE_TAG);

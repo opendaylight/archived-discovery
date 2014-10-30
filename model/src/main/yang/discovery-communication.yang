@@ -11,8 +11,8 @@ module discovery-communication {
 
     import discovery { prefix discovery; }
 
-    organization "Ciena";
-    contact "sdn@ciena.com";
+    organization "Opedaylight";
+    contact "opendaylight-dev@opendaylight.org";
     description
         "Provides RPCs and notifications required to support discovery,
         synchronization, communication, and reconciliation of the network

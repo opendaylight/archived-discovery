@@ -39,11 +39,10 @@ public class CommunicationProvider implements DiscoveryCommunicationListener, Au
     /*
      * (non-Javadoc)
      *
-     * @see org.opendaylight.yang.gen.v1.urn.ciena.discovery.ne.communication.rev141020.NeCommunicationListener#
-     * onNetworkElementCommunicationDown
-     * (org.opendaylight.yang.gen.v1.urn.ciena.discovery.ne.communication.rev141020.NetworkElementCommunicationDown) 1.
-     * Change the node status to Comm Down 2. Remove the node from Controller's Management, so its not available for
-     * PCE/Other Apps
+     * @see
+     * org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.communication.rev141020.DiscoveryCommunicationListener
+     * #onNetworkElementCommunicationDown
+     * (org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.communication.rev141020.NetworkElementCommunicationDown)
      */
     @Override
     public void onNetworkElementCommunicationDown(NetworkElementCommunicationDown notification) {
@@ -79,10 +78,11 @@ public class CommunicationProvider implements DiscoveryCommunicationListener, Au
     /*
      * (non-Javadoc)
      *
-     * @see org.opendaylight.yang.gen.v1.urn.ciena.discovery.ne.communication.rev141020.NeCommunicationListener#
-     * onNetworkElementCommunicationRestored
-     * (org.opendaylight.yang.gen.v1.urn.ciena.discovery.ne.communication.rev141020.NetworkElementCommunicationRestored)
-     * 1. Add the network element back into Controller's management
+     * @see
+     * org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.communication.rev141020.DiscoveryCommunicationListener
+     * #onNetworkElementCommunicationRestored
+     * (org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.communication.rev141020
+     * .NetworkElementCommunicationRestored)
      */
     @Override
     public void onNetworkElementCommunicationRestored(NetworkElementCommunicationRestored notification) {
