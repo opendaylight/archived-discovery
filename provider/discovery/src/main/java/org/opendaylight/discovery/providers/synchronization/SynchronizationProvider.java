@@ -23,7 +23,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.re
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.NetworkElementIdentified;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.NetworkElementInProcess;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.UnableToIdentifyNetworkElement;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.DuplicateRequest;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.DuplicateIdentity;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.IpToNodeIds;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.NodeIdToStates;
@@ -32,7 +31,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.ip.to.n
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.ip.to.node.ids.IpToNodeIdBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.ip.to.node.ids.IpToNodeIdKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.node.id.to.states.NodeIdToState;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.node.id.to.states.NodeIdToStateBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.node.id.to.states.NodeIdToStateKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714.DiscoverySynchronizationListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714.NetworkElementSynchronizationFailure;
@@ -48,16 +46,17 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * OSGi/ODL Activator that registers handlers for notifications pertaining to network elements being identified. If a
- * network element is identified then the handler queues up a request to synchronize the network element. If a network
- * element fails to be identified then an error message is logged.
+ * OSGi/ODL Activator that registers handlers for notifications pertaining to
+ * network elements being identified. If a network element is identified then
+ * the handler queues up a request to synchronize the network element. If a
+ * network element fails to be identified then an error message is logged.
  *
  * @author David Bainbridge <dbainbri@ciena.com>
  * @since 2014-07-15
  */
 
 public class SynchronizationProvider implements DiscoveryIdentificationListener, DiscoverySynchronizationListener,
-DiscoveryCommunicationListener, AutoCloseable {
+        DiscoveryCommunicationListener, AutoCloseable {
     private static Logger log = LoggerFactory.getLogger(SynchronizationProvider.class);
     private final ExecutorService executor;
     private final NotificationProviderService notificationProviderService;
@@ -76,8 +75,9 @@ DiscoveryCommunicationListener, AutoCloseable {
     @Override
     public void onNetworkElementIdentified(final NetworkElementIdentified notification) {
         /*
-         * A new network element has been discovered and has been identified as a known node type. At this point it
-         * needs to be queued up for synchronization.
+         * A new network element has been discovered and has been identified as
+         * a known node type. At this point it needs to be queued up for
+         * synchronization.
          */
 
         InstanceIdentifierBuilder<IpToNodeId> id1 = InstanceIdentifier.builder(IpToNodeIds.class).child(
@@ -93,10 +93,12 @@ DiscoveryCommunicationListener, AutoCloseable {
                 notification.getNodeId());
 
         /*
-         * 1. Now we have the node-ID available so we will put Node-ID in node-id-to-state table a. check if node-id
-         * already has an entry in the table (a1). if the node-id is already in the table then check the associated
-         * state - raise a DuplicateIdentity notification (a2).else enter a new entry nodeID--state in the table if it's
-         * not in the table and send a syncNE routed_RPC
+         * 1. Now we have the node-ID available so we will put Node-ID in
+         * node-id-to-state table a. check if node-id already has an entry in
+         * the table (a1). if the node-id is already in the table then check the
+         * associated state - raise a DuplicateIdentity notification (a2).else
+         * enter a new entry nodeID--state in the table if it's not in the table
+         * and send a syncNE routed_RPC
          */
         final InstanceIdentifierBuilder<NodeIdToState> id = InstanceIdentifier.builder(NodeIdToStates.class).child(
                 NodeIdToState.class, new NodeIdToStateKey(notification.getNodeId()));
@@ -119,21 +121,12 @@ DiscoveryCommunicationListener, AutoCloseable {
                     notify.setNetworkElementIp(notification.getNetworkElementIp());
                     notify.setRequestId(notification.getRequestId());
                     notify.setNodeId(notification.getNodeId());
+                    notify.setCause("IDENTIFICATION: Duplicate Identity. The device node-ID or IP is already in the inventory");
                     log.debug("EVENT : DuplicateIdentity : PUBLISH : {}, {}", notify.getRequestId(),
                             notify.getNetworkElementIp());
                     notificationProviderService.publish(notify.build());
 
                 } else {
-                    NodeIdToStateBuilder table = new NodeIdToStateBuilder();
-                    table.setNodeId(notification.getNodeId());
-                    table.setState(State.Synchronizing);
-                    final ReadWriteTransaction wo = dataBroker.newReadWriteTransaction();
-                    wo.merge(LogicalDatastoreType.OPERATIONAL, id.build(), table.build());
-                    wo.submit();
-
-                    log.debug("STORE : PUT : /node-id-to-states/node-id-to-state/{} : {} ", notification.getNodeId(),
-                            notification.getNetworkElementIp());
-
                     log.debug("EVENT : NetworkElementIdentified : RECEIVED : {}, {}, {}", notification.getRequestId(),
                             notification.getNetworkElementIp(), notification.getNetworkElementType());
                     executor.submit(new SynchronizationJob(rpcRegistry, notificationProviderService, notification));
@@ -156,9 +149,12 @@ DiscoveryCommunicationListener, AutoCloseable {
     /*
      * (non-Javadoc)
      *
-     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.IdentificationListener#
-     * onNetworkElementInProcess
-     * (org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.NetworkElementInProcess)
+     * @see
+     * org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification
+     * .rev140714.IdentificationListener# onNetworkElementInProcess
+     * (org.opendaylight
+     * .yang.gen.v1.urn.opendaylight.discovery.identification.rev140714
+     * .NetworkElementInProcess)
      */
     @Override
     public void onNetworkElementInProcess(NetworkElementInProcess arg0) {
@@ -168,8 +164,9 @@ DiscoveryCommunicationListener, AutoCloseable {
     @Override
     public void onUnableToIdentifyNetworkElement(UnableToIdentifyNetworkElement notification) {
         /*
-         * This notification can come from multiple device plugins and is not an error, just really them letting
-         * everyone know they cannot identify the device type. As such, log to debug the event.
+         * This notification can come from multiple device plugins and is not an
+         * error, just really them letting everyone know they cannot identify
+         * the device type. As such, log to debug the event.
          */
         log.debug("EVENT : UnableToIdentifyNetworkElement : RECEIVED : {}, {}", notification.getRequestId(),
                 notification.getNetworkElementIp());
@@ -181,6 +178,7 @@ DiscoveryCommunicationListener, AutoCloseable {
                 notification.getNetworkElementIp(), notification.getNetworkElementType());
         log.error("Error when attempting to synchronize network element {} using request ID {}. CAUSE {}",
                 notification.getNetworkElementIp(), notification.getRequestId(), notification.getCause());
+        // TODO cleanup the tables (node-id-to-state) if Sync fails
     }
 
     @Override
@@ -191,18 +189,20 @@ DiscoveryCommunicationListener, AutoCloseable {
     @Override
     public void onNetworkElementCommunicationDown(NetworkElementCommunicationDown notification) {
         /*
-         * No op - need this method to support ODL, which can't deal with implementing only some notification handlers
+         * No op - need this method to support ODL, which can't deal with
+         * implementing only some notification handlers
          */
     }
 
     @Override
     public void onNetworkElementCommunicationRestored(NetworkElementCommunicationRestored notification) {
         /*
-         * Network element Communication has been restored (existence), its data needs to be resynchronized with the
-         * network element.
+         * Network element Communication has been restored (existence), its data
+         * needs to be resynchronized with the network element.
          *
-         * TODO: We need to put some sort check here about synchronization, so that in a case of flapping communication
-         * we don't repeatedly attempt to synchronize a network element.
+         * TODO: We need to put some sort check here about synchronization, so
+         * that in a case of flapping communication we don't repeatedly attempt
+         * to synchronize a network element.
          */
         log.debug("EVENT : NetworkElementCommunicationRestored : RECEIVED : {}, {}, {}", notification.getRequestId(),
                 notification.getNetworkElementIp(), notification.getNetworkElementType());
@@ -223,12 +223,6 @@ DiscoveryCommunicationListener, AutoCloseable {
 
     @Override
     public void onDuplicateIdentity(DuplicateIdentity notification) {
-        // no op
-
-    }
-
-    @Override
-    public void onDuplicateRequest(DuplicateRequest notification) {
         // no op
 
     }

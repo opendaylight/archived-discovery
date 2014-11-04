@@ -14,10 +14,8 @@ module discovery-state {
     organization "Opendaylight";
     contact "opendaylight-dev@opendaylight.org";
     description
-        "Provides RPCs and notifications required to support discovery,
-        synchronization, and reconciliation of the network model. This
-        module defines the notifications used in the process to identify
-        the node type associated to a network element.";
+        "Provides RPCs and notifications required to support discovery, synchronization, and reconciliation of the network model.
+        This module defines the notifications used in the process to identify the node type associated to a network element.";
 
     revision "2014-07-14" {
         description "Initial revision";
@@ -43,14 +41,17 @@ module discovery-state {
         leaf timestamp {
             type uint64;
         }
+        leaf cause {
+            type string;
+        }
     }
-     /*
+    /*
       *This is to populate node-id-to-state table, it will only track device states, NOT request states
       */
     notification node-state-change {
-    	uses discovery:node-id-header;
-    	leaf state {
-    	     type discovery:state;
-    	}
+        uses discovery:node-id-header;
+        leaf state {
+            type discovery:state;
+        }
     }
 }

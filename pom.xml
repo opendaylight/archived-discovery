@@ -6,7 +6,7 @@
     <parent>
         <artifactId>odlparent</artifactId>
         <groupId>org.opendaylight.odlparent</groupId>
-        <version>1.4.2-Helium</version>
+        <version>1.4.2-SNAPSHOT</version>
         <relativePath></relativePath>
     </parent>
 
