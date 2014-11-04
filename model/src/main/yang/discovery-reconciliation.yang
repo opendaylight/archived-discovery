@@ -14,10 +14,8 @@ module discovery-reconciliation {
     organization "Opedaylight";
     contact "opendaylight-dev@opendaylight.org";
     description
-        "Provides RPCs and notifications required to support discovery,
-        synchronization, and reconciliation of the network model. This
-        module provides the notification sent when a new connection is
-        resolved based on updated network information.";
+        "Provides RPCs and notifications required to support discovery, synchronization, and reconciliation of the network model.
+        This module provides the notification sent when a new connection is resolved based on updated network information.";
 
     revision "2014-07-14" {
         description "Initial revision";

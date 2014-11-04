@@ -13,6 +13,10 @@ import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.md.sal.common.api.data.AsyncDataChangeEvent;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RoutedRpcRegistration;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.deletion.rev140714.DestroyNetworkElementInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.deletion.rev140714.DestroyNetworkElementOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.deletion.rev140714.DestroyNetworkElementOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.deletion.rev140714.DiscoveryDeletionService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.provider.rev140714.IdentifyNetworkElement;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.provider.rev140714.DiscoveryIdentificationProviderListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.NetworkElementIdentifiedBuilder;
@@ -31,14 +35,15 @@ import org.slf4j.LoggerFactory;
 import com.google.common.util.concurrent.Futures;
 
 /**
- * OSGi/ODL Activator that provides and implementation of the generator interface to generate a given number of network
- * element identified notifications.
+ * OSGi/ODL Activator that provides and implementation of the generator
+ * interface to generate a given number of network element identified
+ * notifications.
  *
  * @author David Bainbridge <dbainbri@ciena.com>
  * @since 2014-07-15
  */
 public class DeviceProvider implements DataChangeListener, DiscoveryIdentificationProviderListener,
-DiscoverySynchronizationService, AutoCloseable {
+        DiscoverySynchronizationService, DiscoveryDeletionService, AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(DeviceProvider.class);
 
     private final NotificationProviderService notificationProviderService;
@@ -57,8 +62,9 @@ DiscoverySynchronizationService, AutoCloseable {
                 notification.getNetworkElementIp(), notification.getNetworkElementType());
 
         /*
-         * For the sample device, if the sum of the octets in the IP address are even then we will it will be considered
-         * identified by this sample device.
+         * For the sample device, if the sum of the octets in the IP address are
+         * even then we will it will be considered identified by this sample
+         * device.
          */
         try {
             InetAddress addr = InetAddress.getByName(notification.getNetworkElementIp());
@@ -72,14 +78,15 @@ DiscoverySynchronizationService, AutoCloseable {
                 builder.setRequestId(notification.getRequestId());
 
                 /*
-                 * This emulates IP 8.8.8.8 and 4.4.4.4 point to the same device thus return the same NodeID(aka unique
-                 * signature)
+                 * This emulates IP 8.8.8.8 and 4.4.4.4 point to the same device
+                 * thus return the same NodeID(aka unique signature)
                  */
                 if (notification.getNetworkElementIp().equals("8.8.8.8")
                         || notification.getNetworkElementIp().equals("4.4.4.4")) {
-                    builder.setNodeId("sample:SDN_NODE_ID_8.8.8.8_and_4.4.4.4_COMBINED_DEVICE");
+                    builder.setNodeId("ciena:SDN_NODE_ID_8.8.8.8_and_4.4.4.4_COMBINED_DEVICE");
                 } else {
-                    builder.setNodeId("sample:SDN_NODE_ID_" + notification.getNetworkElementIp().toString());
+                    builder.setNodeId("ciena:SDN_NODE_ID_" + notification.getNetworkElementIp().toString());
+
                 }
                 builder.setNetworkElementIp(addr.getHostAddress());
                 builder.setNetworkElementType(DEVICE_TYPE_TAG);
@@ -97,8 +104,11 @@ DiscoverySynchronizationService, AutoCloseable {
     /*
      * (non-Javadoc)
      *
-     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization .rev140714.SynchronizationService#
-     * synchronizeNetworkElement (org.opendaylight .yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714
+     * @see
+     * org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization
+     * .rev140714.SynchronizationService# synchronizeNetworkElement
+     * (org.opendaylight
+     * .yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714
      * .SynchronizeNetworkElementInput )
      */
     @Override
@@ -114,11 +124,23 @@ DiscoverySynchronizationService, AutoCloseable {
                 .build());
     }
 
+    @Override
+    public Future<RpcResult<DestroyNetworkElementOutput>> destroyNetworkElement(DestroyNetworkElementInput input) {
+        log.debug("DeviceProvider: RPC : Delete: deleteNetworkElement : RECEIVED : {}, {}, {}", input.getRequestId(),
+                input.getNetworkElementIp(), input.getNetworkElementType());
+        DestroyNetworkElementOutputBuilder builder = new DestroyNetworkElementOutputBuilder();
+        builder.setRequestId(input.getRequestId());
+        builder.setResult(new org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.deletion.rev140714.destroy.network.element.output.result.SuccessBuilder()
+                .setChanges(false).build());
+        return Futures.immediateFuture(RpcResultBuilder.<DestroyNetworkElementOutput> success(builder.build()).build());
+    }
+
     /*
      * (non-Javadoc)
      *
      * @see org.opendaylight.controller.md.sal.binding.api.DataChangeListener#
-     * onDataChanged(org.opendaylight.controller.md .sal.common.api.data.AsyncDataChangeEvent)
+     * onDataChanged(org.opendaylight.controller.md
+     * .sal.common.api.data.AsyncDataChangeEvent)
      */
     @Override
     public void onDataChanged(AsyncDataChangeEvent<InstanceIdentifier<?>, DataObject> event) {

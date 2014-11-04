@@ -1,0 +1,117 @@
+/*
+ * Copyright (c) 2014 Ciena Corporation and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+module discovery-deletion {
+    namespace "urn:opendaylight:discovery:deletion";
+    prefix "delete";
+
+    import discovery { prefix discovery; }
+    import yang-ext { prefix ext; }
+
+    organization "Opedaylight";
+    contact "opendaylight-dev@opendaylight.org";
+    description
+        "Provides RPCs and notifications required to support deletion of network element. This module defines the RPCs and notifications
+        used when deleting a newtork element from the controller information model.";
+
+    revision "2014-07-14" {
+        description "Initial revision";
+    }
+
+    /*
+	* Delete the element from inventory, or mark it as unmanaged object
+	*/
+    notification delete-network-element {
+        description "A request has been made to delete a Network Element";
+        uses discovery:discovery-header;
+        uses discovery:node-id-header;
+        uses discovery:network-element-details;
+    }
+
+    /*
+	* Internal notification to initiate DeletionJob thread to make routed RPC to plugins to delete the NE
+	*/
+    notification finalize-network-element {
+        description "A request to initiate deletionJob thread which makes routed RPC to plugin to delete and cleanup the NE";
+        uses discovery:discovery-header;
+        uses discovery:node-id-header;
+        uses discovery:network-element-details;
+    }
+
+    /**
+     *notification to notify when NE is deleted
+     */
+
+    notification network-element-deleted {
+        uses discovery:discovery-header;
+        uses discovery:node-id-header;
+        uses discovery:network-element-details;
+
+        leaf changes {
+            type boolean;
+            mandatory true;
+            description "Indicates if the deletion of the network element introduced changes into the controller information model";
+        }
+    }
+
+    /*
+    	 * Notification if Delete-network-element call fails to delete the NE
+    	 */
+    notification network-element-deletion-failure {
+        uses discovery:discovery-header;
+        uses discovery:node-id-header;
+        uses discovery:network-element-details;
+        leaf cause {
+            type string;
+            mandatory true;
+        }
+    }
+
+    /* 
+       	 * Routed RPC implemented to support network element deletion. This
+       	 * should be implemented by node type support plugins to query data from
+       	 * a network element and reconcile it into the controller's information
+       	 * model.
+       	 */
+    rpc destroy-network-element {
+        description "Network element IP, node-id, Type, username, password";
+        input {
+            uses discovery:discovery-header;
+            uses discovery:node-id-header;
+            leaf network-element-type-ref {
+                type instance-identifier;
+                ext:context-reference discovery:network-element-type-context;
+                mandatory true;
+            }
+            uses discovery:network-element-details;
+        }
+        output {
+            uses discovery:discovery-header;
+            uses discovery:node-id-header;
+            uses discovery:network-element-details;
+            choice result {
+                default failure;
+                case success {
+                    leaf changes {
+                        type boolean;
+                        mandatory true;
+                        description "Indicates if the deletion of the network element introduced changes into the controller information model";
+                    }
+                }
+                case failure {
+                    leaf cause {
+                        type string;
+                        mandatory "true";
+                    }
+                }
+                case pending {
+                }
+            }
+        }
+    }
+
+}

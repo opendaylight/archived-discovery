@@ -15,10 +15,8 @@ module discovery-identification {
     organization "Opedaylight";
     contact "opendaylight-dev@opendaylight.org";
     description
-        "Provides RPCs and notifications required to support discovery,
-        synchronization, and reconciliation of the network model. This
-        module defines the notifications used in the process to identify
-        the node type associated to a network element.";
+        "Provides RPCs and notifications required to support discovery, synchronization, and reconciliation of the network model.
+        This module defines the notifications used in the process to identify the node type associated to a network element.";
 
     revision "2014-07-14" {
         description "Initial revision";
@@ -33,7 +31,7 @@ module discovery-identification {
      */
     notification network-element-identified {
         uses discovery:discovery-header;
-		uses discovery:node-id-header;
+        uses discovery:node-id-header;
         uses discovery:network-element-details;
     }
 
@@ -44,23 +42,20 @@ module discovery-identification {
             type discovery:state;
         }
     }
-    
-    /*
-     *Notification for a duplicate request if a discover-ne RPC is sent for the same IP that's already in discovery
-     */
-    notification duplicate-request {
-        uses discovery:discovery-header;
-    	uses discovery:node-id-header;
-        uses discovery:network-element-details;
-    }
 
     /*
      *Notification for a duplicate identity if a discover-ne RPC is sent for the same NE (from a different IP) that's already in discovery
+     *Notification for a duplicate request if a discover-ne RPC is sent for the same IP that's already in discovery
      */
     notification duplicate-identity {
-    	uses discovery:discovery-header;
-		uses discovery:node-id-header;
+        uses discovery:discovery-header;
+        uses discovery:node-id-header;
         uses discovery:network-element-details;
+        leaf cause {
+            type string;
+            mandatory true;
+            description "cause why NE was identified as duplicate";
+        }
     }
 
     /*

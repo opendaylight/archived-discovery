@@ -14,11 +14,9 @@ module discovery-communication {
     organization "Opedaylight";
     contact "opendaylight-dev@opendaylight.org";
     description
-        "Provides RPCs and notifications required to support discovery,
-        synchronization, communication, and reconciliation of the network
-        model. This module defines the RPCs and notifications used when
-        synchronizing a newtork elements into the controller information
-        model.";
+        "Provides RPCs and notifications required to support discovery, synchronization, communication, and reconciliation of the
+        network model. This module defines the RPCs and notifications used when synchronizing a newtork elements into the controller
+        information model.";
 
     revision "2014-10-20" {
         description "Initial revision";

@@ -14,10 +14,8 @@ module discovery {
     organization "Opedaylight";
     contact "opendaylight-dev@opendaylight.org";
     description
-        "Provides RPCs and notifications required to support discovery,
-        synchronization, and reconciliation of the network model. This
-        module contains the notification sent when a new network element
-        is made evident and needs to be processed.";
+        "Provides RPCs and notifications required to support discovery, synchronization, and reconciliation of the network model.
+        This module contains the notification sent when a new network element is made evident and needs to be processed.";
 
     revision "2014-07-14" {
         description "Initial revision";
@@ -56,36 +54,29 @@ module discovery {
                 value 8;
             }
             enum deleting {
-            	value 9;
+                value 9;
             }
             enum deleted {
-            	value 10;
+                value 10;
             }
-            enum delettion-failed {
-            	value 11;
-            }
-            enum duplicate-request {
-            	value 12;
+            enum deletion-failed {
+                value 11;
             }
             enum duplicate-identity {
-            	value 13;
+                value 12;
             }
         }
     }
 
-   
-    
     grouping discovery-header {
         leaf request-id {
             type string;
         }
     }
-    
-    grouping node-id-header {  
+
+    grouping node-id-header {
         leaf node-id {
-        	type string;
-        	description "Node ID of the NE";
-        	mandatory false;
+            type string;
         }
         description "Used once node-id becomes available to Discovery Manager and used for Deletion flow";
     }
@@ -131,21 +122,20 @@ module discovery {
         }
     }
 
-
     container discovery-states {
-    	config false;
+        config false;
         list discovery-state {
             key "request-id";
             ordered-by system;
             leaf request-id {
-            	type string;
+                type string;
             }
             leaf network-element-ip {
-            	type string;
+                type string;
             }
             leaf node-id {
-            	type string;
-            	mandatory false;
+                type string;
+                mandatory false;
             }
             leaf state {
                 type state;
@@ -153,36 +143,43 @@ module discovery {
             leaf timestamp {
                 type uint64;
             }
+            leaf cause {
+                type string;
+            }
         }
     }
-    
+
     container node-id-to-states {
-    	config false;
-    	list node-id-to-state {
-        	ordered-by system;
-    		key "node-id";
-    		leaf node-id {
-    			type string;
-    		}
-    		 leaf state {
-    			 type state;
-    			 
-    		}
-    	}
+        config false;
+        list node-id-to-state {
+            ordered-by system;
+            key "node-id";
+            leaf node-id {
+                type string;
+            }
+            leaf state {
+                type state;
+            }
+            leaf network-element-type {
+                type string;
+                description "Node type of NE if known";
+                mandatory false;
+            }
+        }
     }
-    
+
     container ip-to-node-ids {
-    	config false;
-    	list ip-to-node-id {
-    		ordered-by system;
-    		key "network-element-ip";
-    		leaf network-element-ip {
-    			type string;
-    		}
-    		 leaf node-id {
-    			 type string;
-    		}
-    	}
+        config false;
+        list ip-to-node-id {
+            ordered-by system;
+            key "network-element-ip";
+            leaf network-element-ip {
+                type string;
+            }
+            leaf node-id {
+                type string;
+            }
+        }
     }
 
     /*
@@ -221,4 +218,25 @@ module discovery {
             }
         }
     }
+
+    /*
+    *  RPC call to remove the device, GUI calls this with node-ID and IP (will make IP optional later) 
+  	*
+  	*/
+    rpc remove-network-element {
+        description "Network element IP, node ID, Type, username, password";
+        input {
+            uses discovery-header;
+            uses node-id-header;
+            uses network-element-details;
+        }
+        output {
+            uses discovery-header;
+            leaf result {
+                description "success/failure";
+                type boolean;
+            }
+        }
+    }
+
 }

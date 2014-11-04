@@ -15,8 +15,8 @@ module discovery-identification-provider {
     organization "Opedaylight";
     contact "opendaylight-dev@opendaylight.org";
     description
-        "Provides RPCs and notifications required by the module to support
-        identification of network elements as part of the discovery module";
+        "Provides RPCs and notifications required by the module to support identification of network elements as part of the discovery
+        module";
 
     revision "2014-07-14" {
         description "Initial revision";

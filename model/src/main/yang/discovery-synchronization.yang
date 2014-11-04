@@ -15,10 +15,9 @@ module discovery-synchronization {
     organization "Opedaylight";
     contact "opendaylight-dev@opendaylight.org";
     description
-        "Provides RPCs and notifications required to support discovery,
-        synchronization, and reconciliation of the network model. This
-        module defines the RPCs and notifications used when synchronizing
-        a newtork elements into the controller information model.";
+        "Provides RPCs and notifications required to support discovery, synchronization, and reconciliation of the network model.
+        This module defines the RPCs and notifications used when synchronizing a newtork elements into the controller information
+        model.";
 
     revision "2014-07-14" {
         description "Initial revision";
@@ -37,8 +36,7 @@ module discovery-synchronization {
         leaf changes {
             type boolean;
             mandatory true;
-            description "Indicates if the synchronization of the network element introduced
-                        changes into the controller information model";
+            description "Indicates if the synchronization of the network element introduced changes into the controller information model";
         }
     }
 
@@ -62,7 +60,7 @@ module discovery-synchronization {
      * should be implemented by node type support plugins to query data from
      * a network element and reconcile it into the controller's information
      * model.
-     */ 
+     */
     rpc synchronize-network-element {
         description "Network element IP, Type, username, password";
         input {
@@ -84,8 +82,7 @@ module discovery-synchronization {
                     leaf changes {
                         type boolean;
                         mandatory true;
-                        description "Indicates if the synchronization of the network element introduced
-                                                changes into the controller information model";
+                        description "Indicates if the synchronization of the network element introduced changes into the controller information model";
                     }
                 }
                 case failure {
