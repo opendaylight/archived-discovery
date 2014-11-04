@@ -80,6 +80,14 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
     }
 
     private synchronized void updateState(DiscoveryStateChangeBuilder builder) {
+
+        if (builder.getRequestId() == null || builder.getRequestId().isEmpty()) {
+            log.error(
+                    "Recieved state change for node {} with IP {} of type {} changing from state {} to state {}, without a request ID specified, cannot update state table",
+                    builder.getNodeId(), builder.getNetworkElementIp(), builder.getNetworkElementType(),
+                    builder.getFromState(), builder.getToState());
+            return;
+        }
         DiscoveryStateBuilder state = new DiscoveryStateBuilder();
         state.setRequestId(builder.getRequestId());
         state.setNetworkElementIp(builder.getNetworkElementIp());
@@ -185,6 +193,11 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
      */
     @Override
     public void onNetworkElementIdentified(NetworkElementIdentified notification) {
+        if (notification.getRequestId() == null || notification.getRequestId().isEmpty()) {
+            log.error(
+                    "Recieved identification notification without a request ID. Likely cause is that plugin did not set reqeust ID when publishing notification.  Node {} with IP {} of type {}.",
+                    notification.getNodeId(), notification.getNetworkElementIp(), notification.getNetworkElementType());
+        }
         DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
         builder.setRequestId(notification.getRequestId());
         builder.setFromState(State.Identifying);
@@ -252,6 +265,11 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
      */
     @Override
     public void onNetworkElementSynchronizationFailure(NetworkElementSynchronizationFailure notification) {
+        if (notification.getRequestId() == null || notification.getRequestId().isEmpty()) {
+            log.error(
+                    "Recieved synchronization failure notification without a request ID. Likely cause is that plugin did not set reqeust ID when publishing notification.  Node {} with IP {} of type {}.",
+                    notification.getNodeId(), notification.getNetworkElementIp(), notification.getNetworkElementType());
+        }
         DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
         builder.setRequestId(notification.getRequestId());
         builder.setFromState(State.Synchronizing);
@@ -281,6 +299,11 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
      */
     @Override
     public void onNetworkElementSynchronized(NetworkElementSynchronized notification) {
+        if (notification.getRequestId() == null || notification.getRequestId().isEmpty()) {
+            log.error(
+                    "Recieved synchronization notification without a request ID. Likely cause is that plugin did not set reqeust ID when publishing notification.  Node {} with IP {} of type {}.",
+                    notification.getNodeId(), notification.getNetworkElementIp(), notification.getNetworkElementType());
+        }
         DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
         builder.setRequestId(notification.getRequestId());
         builder.setFromState(State.Synchronizing);
@@ -300,7 +323,7 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
         build2.setState(State.Discovered);
         nodeUpdateState(build2, notification.getNetworkElementType());
         log.debug("EVENT : NodeStateChange : PUBLISH : {}, {}, {}, {}", build2.getNodeId(), build2.getState(),
-                builder.getRequestId(), builder.getNetworkElementIp());
+                notification.getRequestId(), notification.getNetworkElementIp());
         notificationProviderService.publish(build2.build());
     }
 
@@ -345,6 +368,11 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
 
     @Override
     public void onNetworkElementDeleted(NetworkElementDeleted notification) {
+        if (notification.getRequestId() == null || notification.getRequestId().isEmpty()) {
+            log.error(
+                    "Recieved deletion  notification without a request ID. Likely cause is that plugin did not set reqeust ID when publishing notification.  Node {} with IP {} of type {}.",
+                    notification.getNodeId(), notification.getNetworkElementIp(), notification.getNetworkElementType());
+        }
         DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
         builder.setRequestId(notification.getRequestId());
         builder.setFromState(State.Deleting);
@@ -363,6 +391,11 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
 
     @Override
     public void onNetworkElementDeletionFailure(NetworkElementDeletionFailure notification) {
+        if (notification.getRequestId() == null || notification.getRequestId().isEmpty()) {
+            log.error(
+                    "Recieved deletion failure notification without a request ID. Likely cause is that plugin did not set reqeust ID when publishing notification.  Node {} with IP {} of type {}.",
+                    notification.getNodeId(), notification.getNetworkElementIp(), notification.getNetworkElementType());
+        }
         DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
         builder.setRequestId(notification.getRequestId());
         builder.setFromState(State.Deleting);
