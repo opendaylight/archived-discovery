@@ -10,6 +10,7 @@ import org.opendaylight.controller.config.api.DependencyResolver;
 import org.opendaylight.controller.config.api.ModuleIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RpcRegistration;
 import org.opendaylight.discovery.providers.communication.CommunicationProvider;
 import org.opendaylight.discovery.providers.deletion.DeletionProvider;
@@ -57,27 +58,47 @@ public class DiscoveryProviderModule extends AbstractDiscoveryProviderModule {
         DiscoveryStatesBuilder discoveryStates = new DiscoveryStatesBuilder();
         ReadWriteTransaction wo = getDataBrokerDependency().newReadWriteTransaction();
         wo.merge(LogicalDatastoreType.OPERATIONAL, stateContainer.build(), discoveryStates.build());
-        wo.submit();
+        try {
+            wo.submit().checkedGet();
+            log.debug("STORE : INITIALIZED : discovery-states tree");
+        } catch (TransactionCommitFailedException e) {
+            log.error("Error while attempting to initialize root of the discovery-states tree table ", e);
+        }
 
         final InstanceIdentifierBuilder<NetworkElementTypes> neTypeContainer = InstanceIdentifier
                 .builder(NetworkElementTypes.class);
         NetworkElementTypesBuilder neTypes = new NetworkElementTypesBuilder();
         wo = getDataBrokerDependency().newReadWriteTransaction();
         wo.merge(LogicalDatastoreType.OPERATIONAL, neTypeContainer.build(), neTypes.build());
-        wo.submit();
+        try {
+            wo.submit().checkedGet();
+            log.debug("STORE : INITIALIZED : network-element-types tree");
+        } catch (TransactionCommitFailedException e) {
+            log.error("Error while attempting to initialize root of the network-element-types tree table ", e);
+        }
 
         final InstanceIdentifierBuilder<NodeIdToStates> nodeIdToGuidContainer = InstanceIdentifier
                 .builder(NodeIdToStates.class);
         NodeIdToStatesBuilder nodeIdToGuid = new NodeIdToStatesBuilder();
         wo = getDataBrokerDependency().newReadWriteTransaction();
         wo.merge(LogicalDatastoreType.OPERATIONAL, nodeIdToGuidContainer.build(), nodeIdToGuid.build());
-        wo.submit();
+        try {
+            wo.submit().checkedGet();
+            log.debug("STORE : INITIALIZED : node-id-to-states tree");
+        } catch (TransactionCommitFailedException e) {
+            log.error("Error while attempting to initialize root of the node-id-to-states tree table ", e);
+        }
 
         final InstanceIdentifierBuilder<IpToNodeIds> ipToGuidContainer = InstanceIdentifier.builder(IpToNodeIds.class);
         IpToNodeIdsBuilder ipToGuid = new IpToNodeIdsBuilder();
         wo = getDataBrokerDependency().newReadWriteTransaction();
         wo.merge(LogicalDatastoreType.OPERATIONAL, ipToGuidContainer.build(), ipToGuid.build());
-        wo.submit();
+        try {
+            wo.submit().checkedGet();
+            log.debug("STORE : INITIALIZED : ip-to-node-ids tree");
+        } catch (TransactionCommitFailedException e) {
+            log.error("Error while attempting to initialize root of the ip-to-node-ids tree table ", e);
+        }
 
         final IdentificationProvider identificationProvider = new IdentificationProvider(
                 getNotificationServiceDependency(), getDataBrokerDependency());

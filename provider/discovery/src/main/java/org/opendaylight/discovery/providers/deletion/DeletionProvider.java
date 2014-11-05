@@ -1,5 +1,5 @@
 /*
-
+ *
  * Copyright (c) 2014 Ciena Corporation and others. All rights reserved.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse Public License v1.0
@@ -38,16 +38,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * OSGi/ODL Activator that registers handlers for notifications pertaining to
- * network elements being identified. If a network element is identified then
- * the handler queues up a request to synchronize the network element. If a
- * network element fails to be identified then an error message is logged.
+ * OSGi/ODL Activator that registers handlers for notifications pertaining to network elements being identified. If a
+ * network element is identified then the handler queues up a request to synchronize the network element. If a network
+ * element fails to be identified then an error message is logged.
  *
  * @author Gunjan Patel <gupatel@ciena.com>
  * @since 2014-10-25
@@ -136,8 +134,7 @@ public class DeletionProvider implements DiscoveryDeletionListener, AutoCloseabl
 
         final DeleteNetworkElement input = notification;
         /*
-         * If no transaction ID was specified with the notification then
-         * generate a transaction ID
+         * If no transaction ID was specified with the notification then generate a transaction ID
          */
         String txnId = input.getRequestId();
         if (txnId == null || txnId.isEmpty()) {
@@ -156,9 +153,8 @@ public class DeletionProvider implements DiscoveryDeletionListener, AutoCloseabl
             Futures.addCallback(data, new FutureCallback<Optional<IpToNodeId>>() {
                 @Override
                 public void onSuccess(final Optional<IpToNodeId> readResult) {
-                    if (readResult.isPresent()) { // check if we have an entry
-                                                  // for that IP in
-                                                  // IP-to-Node-id table
+                    if (readResult.isPresent()) {
+                        // check if we have an entry for that IP in IP-to-Node-id table
                         log.debug("READ Node-ID of IP: {}, is Node-ID: {}", input.getNetworkElementIp(), readResult
                                 .get().getNodeId().toString());
                         final String fnid = readResult.get().getNodeId();
@@ -210,17 +206,14 @@ public class DeletionProvider implements DiscoveryDeletionListener, AutoCloseabl
 
         final ReadWriteTransaction wo = dataBroker.newReadWriteTransaction();
         wo.delete(LogicalDatastoreType.OPERATIONAL, id.build());
-
-        CheckedFuture<Void, TransactionCommitFailedException> sync = wo.submit();
         try {
-            sync.checkedGet();
+            wo.submit().checkedGet();
+            log.debug("STORE : DELETE : /node-id-to-states/node-id-to-state/{},  ReqID: {} ", notification.getNodeId(),
+                    notification.getRequestId());
         } catch (TransactionCommitFailedException e) {
-            log.error(String.format(
-                    "Error while attempting to delete NE from node-id to state table for request: {}, node-id: {}",
-                    notification.getRequestId(), notification.getNodeId(), e));
+            log.error("Error while attempting to delete NE from node-id to state table for request: {}, node-id: {}",
+                    notification.getRequestId(), notification.getNodeId(), e);
         }
-        log.debug("STORE : DELETE : /node-id-to-states/node-id-to-state/{},  ReqID: {} ", notification.getNodeId(),
-                notification.getRequestId());
     }
 
     @Override

@@ -13,6 +13,7 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714.DuplicateIdentityBuilder;
@@ -88,9 +89,13 @@ public class SynchronizationProvider implements DiscoveryIdentificationListener,
         table.setNodeId(notification.getNodeId());
         final ReadWriteTransaction wo = dataBroker.newReadWriteTransaction();
         wo.merge(LogicalDatastoreType.OPERATIONAL, id1.build(), table.build());
-        wo.submit();
-        log.debug("STORE : PUT : /ip-to-node-ids/ip-to-node-id/{} : {} ", notification.getNetworkElementIp(),
-                notification.getNodeId());
+        try {
+            wo.submit().checkedGet();
+            log.debug("STORE : PUT : /ip-to-node-ids/ip-to-node-id/{} : {} ", notification.getNetworkElementIp(),
+                    notification.getNodeId());
+        } catch (TransactionCommitFailedException e) {
+            log.error("Error while attempting to submit changes to ip-to-node-ids tree table for request {}", notification.getRequestId(), e);
+        }
 
         /*
          * 1. Now we have the node-ID available so we will put Node-ID in

@@ -47,13 +47,10 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier.InstanceIdenti
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.util.concurrent.CheckedFuture;
-
 /**
- * OSGi/ODL Activator that registers handlers for notifications pertaining to
- * network elements being identified. If a network element is identified then
- * the handler queues up a request to synchronize the network element. If a
- * network element fails to be identified then an error message is logged.
+ * OSGi/ODL Activator that registers handlers for notifications pertaining to network elements being identified. If a
+ * network element is identified then the handler queues up a request to synchronize the network element. If a network
+ * element fails to be identified then an error message is logged.
  *
  * @author David Bainbridge <dbainbri@ciena.com>
  * @since 2014-07-15
@@ -104,15 +101,14 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
                 DiscoveryState.class, new DiscoveryStateKey(builder.getRequestId()));
         final ReadWriteTransaction wo = dataBroker.newReadWriteTransaction();
         wo.merge(LogicalDatastoreType.OPERATIONAL, id.build(), state.build());
-        CheckedFuture<Void, TransactionCommitFailedException> sync = wo.submit();
         try {
-            sync.checkedGet();
+            wo.submit().checkedGet();
+            log.debug("STORE : PUT : /discovery-states/discovery-state/{} : {} , {} , {}", builder.getRequestId(),
+                    builder.getNetworkElementIp(), builder.getToState(), builder.getNodeId());
         } catch (TransactionCommitFailedException e) {
-            log.error(String.format("Error while attempting to persist status update for request {}, to status {}",
-                    builder.getRequestId(), builder.getToState()), e);
+            log.error("Error while attempting to persist status update for request {}, to status {}",
+                    builder.getRequestId(), builder.getToState(), e);
         }
-        log.debug("STORE : PUT : /discovery-states/discovery-state/{} : {} , {} , {}", builder.getRequestId(),
-                builder.getNetworkElementIp(), builder.getToState(), builder.getNodeId());
         log.debug("TRANSITION: ReqID {} from {} to {} @ {}", builder.getRequestId(), builder.getFromState(),
                 builder.getToState(), builder.getTimestamp());
     }
@@ -126,43 +122,38 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
                 NodeIdToState.class, new NodeIdToStateKey(builder.getNodeId()));
         final ReadWriteTransaction wo = dataBroker.newReadWriteTransaction();
         wo.merge(LogicalDatastoreType.OPERATIONAL, id.build(), table.build());
-        CheckedFuture<Void, TransactionCommitFailedException> sync = wo.submit();
         try {
-            sync.checkedGet();
+            wo.submit().checkedGet();
+            log.debug("STORE : PUT : /node-id-to-states/node-id-to-state/{} : {} ", builder.getNodeId(), builder.getState());
         } catch (TransactionCommitFailedException e) {
-            log.error(String.format("Error while attempting to persist status update for request {}, to status {}",
-                    builder.getNodeId(), builder.getState()), e);
+            log.error("Error while attempting to persist status update for request {}, to status {}",
+                    builder.getNodeId(), builder.getState(), e);
         }
-        log.debug("STORE : PUT : /node-id-to-states/node-id-to-state/{} : {} ", builder.getNodeId(), builder.getState());
     }
 
     /*
      * (non-Javadoc)
      *
-     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714.
-     * DiscoveryListener#onNewNetworkElement( NewNetworkElement)
+     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.rev140714. DiscoveryListener#onNewNetworkElement(
+     * NewNetworkElement)
      */
     @Override
     public void onNewNetworkElement(NewNetworkElement notification) {
         /*
-         * This notification is not handle by the state manager because it is
-         * the notification that initiates the process, thus it is the initial
-         * state and will be handled by the identity manager. This eliminates a
-         * race condition between the state manager and the identity manager as
-         * to which reads and / or writes the the initial state in the data
-         * store.
+         * This notification is not handle by the state manager because it is the notification that initiates the
+         * process, thus it is the initial state and will be handled by the identity manager. This eliminates a race
+         * condition between the state manager and the identity manager as to which reads and / or writes the the
+         * initial state in the data store.
          */
     }
 
     /*
      * (non-Javadoc)
      *
-     * @see
-     * org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification
-     * .provider.rev140714. IdentificationProviderListener
-     * #onIdentifyNetworkElement
-     * (org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification
-     * .provider.rev140714. IdentifyNetworkElement)
+     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification .provider.rev140714.
+     * IdentificationProviderListener #onIdentifyNetworkElement
+     * (org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification .provider.rev140714.
+     * IdentifyNetworkElement)
      */
     @Override
     public void onIdentifyNetworkElement(IdentifyNetworkElement notification) {
@@ -184,11 +175,8 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
     /*
      * (non-Javadoc)
      *
-     * @see
-     * org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification
-     * .rev140714.IdentificationListener# onNetworkElementIdentified
-     * (org.opendaylight
-     * .yang.gen.v1.urn.opendaylight.discovery.identification.rev140714
+     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification .rev140714.IdentificationListener#
+     * onNetworkElementIdentified (org.opendaylight .yang.gen.v1.urn.opendaylight.discovery.identification.rev140714
      * .NetworkElementIdentified)
      */
     @Override
@@ -217,12 +205,9 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
     /*
      * (non-Javadoc)
      *
-     * @see
-     * org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification
-     * .rev140714.DiscoveryIdentificationListener #onNetworkElementInProcess
-     * (org
-     * .opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714
-     * .NetworkElementInProcess)
+     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification
+     * .rev140714.DiscoveryIdentificationListener #onNetworkElementInProcess (org
+     * .opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification.rev140714 .NetworkElementInProcess)
      */
     @Override
     public void onNetworkElementInProcess(NetworkElementInProcess notification) {
@@ -232,21 +217,16 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
     /*
      * (non-Javadoc)
      *
-     * @see
-     * org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification
-     * .rev140714.IdentificationListener# onUnableToIdentifyNetworkElement
-     * (org.opendaylight
-     * .yang.gen.v1.urn.opendaylight.discovery.identification.rev140714
-     * .UnableToIdentifyNetworkElement)
+     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.identification .rev140714.IdentificationListener#
+     * onUnableToIdentifyNetworkElement (org.opendaylight
+     * .yang.gen.v1.urn.opendaylight.discovery.identification.rev140714 .UnableToIdentifyNetworkElement)
      */
     @Override
     public void onUnableToIdentifyNetworkElement(UnableToIdentifyNetworkElement notification) {
         /*
-         * If there are 4 device plugins, then 3 may publish this notification
-         * and one may publish a success notification. As such, the reception of
-         * this notification really isn't an error or a state change this is
-         * really an informational message. As such the message will be logged,
-         * but no state change will take place.
+         * If there are 4 device plugins, then 3 may publish this notification and one may publish a success
+         * notification. As such, the reception of this notification really isn't an error or a state change this is
+         * really an informational message. As such the message will be logged, but no state change will take place.
          */
         log.debug("EVENT : UnableToIdentifyNetworkElement : RECEIVED : {}, {}", notification.getRequestId(),
                 notification.getNetworkElementIp());
@@ -255,13 +235,9 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
     /*
      * (non-Javadoc)
      *
-     * @see
-     * org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization
-     * .rev140714.SynchronizationListener#
-     * onNetworkElementSynchronizationFailure
-     * (org.opendaylight.yang.gen.v1.urn.opendaylight
-     * .discovery.synchronization.rev140714
-     * .NetworkElementSynchronizationFailure)
+     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization .rev140714.SynchronizationListener#
+     * onNetworkElementSynchronizationFailure (org.opendaylight.yang.gen.v1.urn.opendaylight
+     * .discovery.synchronization.rev140714 .NetworkElementSynchronizationFailure)
      */
     @Override
     public void onNetworkElementSynchronizationFailure(NetworkElementSynchronizationFailure notification) {
@@ -290,12 +266,9 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
     /*
      * (non-Javadoc)
      *
-     * @see
-     * org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization
-     * .rev140714.SynchronizationListener# onNetworkElementedSynchronized
-     * (org.opendaylight
-     * .yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714
-     * .NetworkElementedSynchronized)
+     * @see org.opendaylight.yang.gen.v1.urn.opendaylight.discovery.synchronization .rev140714.SynchronizationListener#
+     * onNetworkElementedSynchronized (org.opendaylight
+     * .yang.gen.v1.urn.opendaylight.discovery.synchronization.rev140714 .NetworkElementedSynchronized)
      */
     @Override
     public void onNetworkElementSynchronized(NetworkElementSynchronized notification) {
@@ -370,7 +343,7 @@ public class StateProvider implements DiscoveryListener, DiscoveryIdentification
     public void onNetworkElementDeleted(NetworkElementDeleted notification) {
         if (notification.getRequestId() == null || notification.getRequestId().isEmpty()) {
             log.error(
-                    "Recieved deletion  notification without a request ID. Likely cause is that plugin did not set reqeust ID when publishing notification.  Node {} with IP {} of type {}.",
+                    "Recieved deletion notification without a request ID. Likely cause is that plugin did not set reqeust ID when publishing notification.  Node {} with IP {} of type {}.",
                     notification.getNodeId(), notification.getNetworkElementIp(), notification.getNetworkElementType());
         }
         DiscoveryStateChangeBuilder builder = new DiscoveryStateChangeBuilder();
