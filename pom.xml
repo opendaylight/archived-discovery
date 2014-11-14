@@ -40,7 +40,9 @@
         <guava.version>14.0.1</guava.version>
         <yangtools.version>0.6.2-SNAPSHOT</yangtools.version>
         <yangtools.generator.version>0.6.2-SNAPSHOT</yangtools.generator.version>
+        <yangtools.jmx.generator.version>0.2.5-SNAPSHOT</yangtools.jmx.generator.version>
         <controller.model.version>1.1-SNAPSHOT</controller.model.version>
+        <opendaylight.checkstyle.version>0.0.3-SNAPSHOT</opendaylight.checkstyle.version>
 
         <config.version>0.2.5-SNAPSHOT</config.version>
         <mdsal.version>1.1-SNAPSHOT</mdsal.version>
@@ -54,6 +56,10 @@
         <nexusproxy>https://nexus.opendaylight.org/content</nexusproxy>
         <nexus.opendaylight.snapshot>opendaylight.snapshot</nexus.opendaylight.snapshot>
         <nexus.opendaylight.release>opendaylght.release</nexus.opendaylight.release>
+
+        <maven.plugin.bundle.version>2.3.7</maven.plugin.bundle.version>
+        <mave.eclipse.m2e.plugin.version>1.0.0</mave.eclipse.m2e.plugin.version>
+        <maven.lifecycle-mapping.plugin.version>1.0.0</maven.lifecycle-mapping.plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -140,6 +146,66 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>${maven.plugin.bundle.version}</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <instructions>
+                            <Import-Package>*</Import-Package>
+                        </instructions>
+                        <manifestLocation>${project.build.directory}/META-INF</manifestLocation>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.opendaylight.yangtools</groupId>
+                    <artifactId>yang-maven-plugin</artifactId>
+                    <version>${yangtools.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>generate-sources</goal>
+                            </goals>
+                            <configuration>
+                                <yangFilesRootDir>src/main/yang</yangFilesRootDir>
+                                <codeGenerators>
+                                    <generator>
+                                        <codeGeneratorClass>
+                                            org.opendaylight.yangtools.maven.sal.api.gen.plugin.CodeGeneratorImpl
+                                        </codeGeneratorClass>
+                                        <outputBaseDir>
+                                            target/generated-sources/sal
+                                        </outputBaseDir>
+                                    </generator>
+                                    <generator>
+                                        <codeGeneratorClass>
+                                            org.opendaylight.yangtools.yang.unified.doc.generator.maven.DocumentationGeneratorImpl
+                                        </codeGeneratorClass>
+                                        <outputBaseDir>target/site/restconf</outputBaseDir>
+                                    </generator>
+                                </codeGenerators>
+                                <inspectDependencies>true</inspectDependencies>
+                            </configuration>
+                        </execution>
+                    </executions>
+
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.opendaylight.yangtools</groupId>
+                            <artifactId>maven-sal-api-gen-plugin</artifactId>
+                            <version>${yangtools.generator.version}</version>
+                            <type>jar</type>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.opendaylight.controller</groupId>
+                            <artifactId>yang-jmx-generator-plugin</artifactId>
+                            <version>${yangtools.jmx.generator.version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${checkstyle.version}</version>
@@ -148,7 +214,7 @@
                 <plugin>
                     <groupId>org.eclipse.m2e</groupId>
                     <artifactId>discovery-mapping</artifactId>
-                    <version>1.0.0</version>
+                    <version>${mave.eclipse.m2e.plugin.version}</version>
                     <configuration>
                         <discoveryMappingMetadata>
                             <pluginExecutions>
@@ -179,7 +245,7 @@
                 <plugin>
                     <groupId>org.eclipse.m2e</groupId>
                     <artifactId>lifecycle-mapping</artifactId>
-                    <version>1.0.0</version>
+                    <version>${maven.lifecycle-mapping.plugin.version}</version>
                     <configuration>
                         <lifecycleMappingMetadata>
                             <pluginExecutions>
@@ -225,7 +291,7 @@
                     <dependency>
                         <groupId>org.opendaylight.controller</groupId>
                         <artifactId>checkstyle</artifactId>
-                        <version>0.0.3-SNAPSHOT</version>
+                        <version>${opendaylight.checkstyle.version}</version>
                     </dependency>
                 </dependencies>
                 <executions>
