@@ -1,0 +1,33 @@
+title Assigning Network Element Type
+
+participant "SNMP\nProtocol\nPlugin" as SPP
+participant "\nDevice\nPlugin" as DP
+participant "Asynchronous\nData Broker\n<<md-sal>>" as DB
+participant "Identification\nPlugin\n<<discovery>>" as IP
+participant "\nRESTCONF\n<<md-sal>>" as RC
+participant "\nClient\n<<external>>" as CL
+
+IP->DB: register /config/inventory/nodes
+DP->DB: register /operational/inventory/nodes/*/type=="TYPE"
+
+CL->RC: POST /config/inventory/nodes\n{discovery : { ipaddress : 1.2.3.4,\n  username : joe,\n  password : changeme }}
+RC->DB: commit /config/inventory/nodes/<id>\n{discovery : { ipaddress : 1.2.3.4,\n  username : joe,\n  password : changeme }}
+DB-->IP: change /config/inventory/nodes/<id>\n{discovery : { ipaddress : 1.2.3.4,\n  username : joe,\n  password : changeme }}
+
+activate IP
+  IP->SPP: get "system identification info"
+  SPP->IP: <data>
+  alt can identify type from SNMP data
+    IP->DB: commit /operational/inventory/nodes/<id>\n{discovery : { ipaddress : 1.2.3.4,\n  username : joe,\n  password : changeme },\n  type : TYPE}
+  else cannot identify type from SNMP data
+
+    IP->DB: commit /operational/inventory/nodes/<id>\n{discovery : { ipaddress : 1.2.3.4,\n  username : joe,\n  password : changeme },\n  type : UNKNOWN}
+    deactivate IP
+    DB-->DP: change /operational/inventory/nodes/<id>\n{discovery : { ipaddress : 1.2.3.4,\n  username : joe,\n  password : changeme },\n  type : UNKNOWN}
+    activate DP
+      alt can identify device as plugin TYPE
+        DP->DB: commit /operational/inventory/nodes/<id>\n{discovery : { ipaddress : 1.2.3.4,\n  username : joe,\n  password : changeme },\n  type : TYPE}
+      end
+    deactivate DP
+  end
+

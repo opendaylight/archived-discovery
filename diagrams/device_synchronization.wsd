@@ -1,0 +1,20 @@
+title Synchronizing Network Element Type
+
+participant "\nProtocol\nPlugin" as PP
+participant "\nDevice\nPlugin" as DP
+participant "Asynchronous\nData Broker\n<<md-sal>>" as DB
+participant "Identification\nPlugin\n<<discovery>>" as IP
+
+DB-->IP: change\n/operational/inventory/nodes/<id>\n{type : TYPE}
+activate IP
+  IP->DB: commit\n/config/inventory/nodes/<id>\n{state : synchronizing}
+deactivate IP
+
+DB-->DP: change\n/config/inventory/nodes/<id>\n{state : synchronizing}
+activate DP
+  DP->DB: commit\n/config/inventory/nodes/<id>\n{state : synchronizing}
+  DP->PP: get "device inventory"
+  PP->DP: <inventory>
+  DP->DB: commit\n/operational/inventory/nodes<id>\n{ "inventory" \nstate : synchronized }
+deactivate DP
+
