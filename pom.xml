@@ -38,7 +38,6 @@
 
         <sal.version>0.8.1-SNAPSHOT</sal.version>
         <sal.connection.version>0.1.2-SNAPSHOT</sal.connection.version>
-        <guava.version>14.0.1</guava.version>
         <yangtools.version>0.6.2-SNAPSHOT</yangtools.version>
         <yangtools.generator.version>0.6.2-SNAPSHOT</yangtools.generator.version>
         <yangtools.jmx.generator.version>0.2.5-SNAPSHOT</yangtools.jmx.generator.version>
@@ -79,11 +78,6 @@
                 <groupId>org.opendaylight</groupId>
                 <artifactId>config-mgr-model</artifactId>
                 <version>${config.mgr.model.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${guava.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.opendaylight.controller.model</groupId>
