@@ -1,13 +1,13 @@
 /*
- * Copyright (c) 2014 Ciena Corporation and others. All rights reserved.
+ * Copyright (c) 2014 Ciena Corporation and others.  All rights reserved.
  *
- * This program and the accompanying materials are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.discovery.config.device_provider.impl;
 
-import org.opendaylight.controller.config.api.DependencyResolver;
-import org.opendaylight.controller.config.api.ModuleIdentifier;
+package org.opendaylight.controller.config.yang.config.device_provider.impl;
+
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.RoutedRpcRegistration;
 import org.opendaylight.discovery.samples.device.DeviceProvider;
@@ -23,20 +23,24 @@ import org.opendaylight.yangtools.yang.binding.NotificationListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DeviceProviderModule extends AbstractDeviceProviderModule {
+public class DeviceProviderModule extends org.opendaylight.controller.config.yang.config.device_provider.impl.AbstractDeviceProviderModule {
     private static Logger log = LoggerFactory.getLogger(DeviceProviderModule.class);
     private ListenerRegistration<NotificationListener> notificationReg = null;
     private RoutedRpcRegistration<DiscoverySynchronizationService> rpcReg = null;
     private RoutedRpcRegistration<DiscoveryDeletionService> rpcReg2 = null;
     private ListenerRegistration<DataChangeListener> dataReg = null;
 
-    public DeviceProviderModule(ModuleIdentifier identifier, DependencyResolver dependencyResolver) {
+    public DeviceProviderModule(org.opendaylight.controller.config.api.ModuleIdentifier identifier, org.opendaylight.controller.config.api.DependencyResolver dependencyResolver) {
         super(identifier, dependencyResolver);
     }
 
-    public DeviceProviderModule(ModuleIdentifier identifier, DependencyResolver dependencyResolver,
-            DeviceProviderModule oldModule, AutoCloseable oldInstance) {
+    public DeviceProviderModule(org.opendaylight.controller.config.api.ModuleIdentifier identifier, org.opendaylight.controller.config.api.DependencyResolver dependencyResolver, org.opendaylight.controller.config.yang.config.device_provider.impl.DeviceProviderModule oldModule, java.lang.AutoCloseable oldInstance) {
         super(identifier, dependencyResolver, oldModule, oldInstance);
+    }
+
+    @Override
+    public void customValidation() {
+        // add custom validation form module attributes here.
     }
 
     @Override
