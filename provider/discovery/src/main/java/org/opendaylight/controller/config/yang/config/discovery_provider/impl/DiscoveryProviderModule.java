@@ -1,13 +1,13 @@
 /*
- * Copyright (c) 2014 Ciena Corporation and others. All rights reserved.
+ * Copyright (c) 2014 Ciena Corporation and others.  All rights reserved.
  *
- * This program and the accompanying materials are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.discovery.config.discovery_provider.impl;
 
-import org.opendaylight.controller.config.api.DependencyResolver;
-import org.opendaylight.controller.config.api.ModuleIdentifier;
+package org.opendaylight.controller.config.yang.config.discovery_provider.impl;
+
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
@@ -34,20 +34,25 @@ import org.opendaylight.yangtools.yang.binding.NotificationListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DiscoveryProviderModule extends AbstractDiscoveryProviderModule {
+public class DiscoveryProviderModule extends org.opendaylight.controller.config.yang.config.discovery_provider.impl.AbstractDiscoveryProviderModule {
+
     private static Logger log = LoggerFactory.getLogger(DiscoveryProviderModule.class);
 
-    public DiscoveryProviderModule(ModuleIdentifier identifier, DependencyResolver dependencyResolver) {
+    public DiscoveryProviderModule(org.opendaylight.controller.config.api.ModuleIdentifier identifier, org.opendaylight.controller.config.api.DependencyResolver dependencyResolver) {
         super(identifier, dependencyResolver);
     }
 
-    public DiscoveryProviderModule(ModuleIdentifier identifier, DependencyResolver dependencyResolver,
-            DiscoveryProviderModule oldModule, AutoCloseable oldInstance) {
+    public DiscoveryProviderModule(org.opendaylight.controller.config.api.ModuleIdentifier identifier, org.opendaylight.controller.config.api.DependencyResolver dependencyResolver, org.opendaylight.controller.config.yang.config.discovery_provider.impl.DiscoveryProviderModule oldModule, java.lang.AutoCloseable oldInstance) {
         super(identifier, dependencyResolver, oldModule, oldInstance);
     }
 
     @Override
-    public AutoCloseable createInstance() {
+    public void customValidation() {
+        // add custom validation form module attributes here.
+    }
+
+    @Override
+    public java.lang.AutoCloseable createInstance() {
         log.debug("CREATE : {}", Integer.toHexString(this.hashCode()));
 
         /*
@@ -203,4 +208,5 @@ public class DiscoveryProviderModule extends AbstractDiscoveryProviderModule {
         log.debug("INITIALIZED : {}", Integer.toHexString(this.hashCode()));
         return ret;
     }
+
 }

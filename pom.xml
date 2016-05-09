@@ -1,311 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright (c) 2014 Ciena Corporation and others.  All rights reserved.
+
+ This program and the accompanying materials are made available under the
+ terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>odlparent</artifactId>
         <groupId>org.opendaylight.odlparent</groupId>
-        <version>1.5.0-SNAPSHOT</version>
-        <relativePath></relativePath>
+        <artifactId>odlparent</artifactId>
+        <version>1.7.0-SNAPSHOT</version>
+        <relativePath />
     </parent>
 
     <groupId>org.opendaylight.discovery</groupId>
     <artifactId>parent</artifactId>
     <version>0.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>discovery</name> <!-- Used by Sonar to set project name -->
-
-    <distributionManagement>
-        <!-- OpenDayLight Released artifact -->
-        <repository>
-            <id>opendaylight-release</id>
-            <url>${nexusproxy}/repositories/${nexus.opendaylight.release}/</url>
-        </repository>
-        <!-- OpenDayLight Snapshot artifact -->
-        <snapshotRepository>
-            <id>opendaylight-snapshot</id>
-            <url>${nexusproxy}/repositories/${nexus.opendaylight.snapshot}/</url>
-        </snapshotRepository>
-        <site>
-            <id>${project.artifactId}-site</id>
-            <url>./</url>
-        </site>
-    </distributionManagement>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <sal.version>0.8.1-SNAPSHOT</sal.version>
-        <sal.connection.version>0.1.2-SNAPSHOT</sal.connection.version>
-        <guava.version>14.0.1</guava.version>
-        <yangtools.version>0.6.2-SNAPSHOT</yangtools.version>
-        <yangtools.generator.version>0.6.2-SNAPSHOT</yangtools.generator.version>
-        <yangtools.jmx.generator.version>0.2.5-SNAPSHOT</yangtools.jmx.generator.version>
-        <controller.model.version>1.1-SNAPSHOT</controller.model.version>
-        <opendaylight.checkstyle.version>0.0.3-SNAPSHOT</opendaylight.checkstyle.version>
-
-        <config.version>0.2.5-SNAPSHOT</config.version>
-        <mdsal.version>1.1-SNAPSHOT</mdsal.version>
-        <generatedConfigPath>target/generated-sources/config</generatedConfigPath>
-        <generatedSalPath>target/generated-sources/sal</generatedSalPath>
-        <generatedDocPath>target/generated-sources/restconf</generatedDocPath>
-
-        <model.forwarding.nodal.version>0.3.0-SNAPSHOT</model.forwarding.nodal.version>
-        <config.mgr.model.version>0.3.0-SNAPSHOT</config.mgr.model.version>
-
-        <nexusproxy>https://nexus.opendaylight.org/content</nexusproxy>
-        <nexus.opendaylight.snapshot>opendaylight.snapshot</nexus.opendaylight.snapshot>
-        <nexus.opendaylight.release>opendaylght.release</nexus.opendaylight.release>
-
-        <maven.plugin.bundle.version>2.3.7</maven.plugin.bundle.version>
-        <mave.eclipse.m2e.plugin.version>1.0.0</mave.eclipse.m2e.plugin.version>
-        <maven.lifecycle-mapping.plugin.version>1.0.0</maven.lifecycle-mapping.plugin.version>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.opendaylight.controller</groupId>
-                <artifactId>config-api</artifactId>
-                <version>${config.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.controller</groupId>
-                <artifactId>sal-binding-config</artifactId>
-                <version>${mdsal.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight</groupId>
-                <artifactId>config-mgr-model</artifactId>
-                <version>${config.mgr.model.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${guava.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.controller.model</groupId>
-                <artifactId>model-flow-base</artifactId>
-                <version>${controller.model.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.controller.model</groupId>
-                <artifactId>model-flow-management</artifactId>
-                <version>${controller.model.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.controller.model</groupId>
-                <artifactId>model-flow-service</artifactId>
-                <version>${controller.model.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.controller.model</groupId>
-                <artifactId>model-flow-statistics</artifactId>
-                <version>${controller.model.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.model-forwarding</groupId>
-                <artifactId>model-forwarding-nodal</artifactId>
-                <version>0.3.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.controller.model</groupId>
-                <artifactId>model-inventory</artifactId>
-                <version>${controller.model.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.controller</groupId>
-                <artifactId>sal-binding-api</artifactId>
-                <version>${controller.model.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.controller</groupId>
-                <artifactId>sal-binding-util</artifactId>
-                <version>${controller.model.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.controller</groupId>
-                <artifactId>sal</artifactId>
-                <version>${sal.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.controller</groupId>
-                <artifactId>sal.connection</artifactId>
-                <version>${sal.connection.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.controller</groupId>
-                <artifactId>sal-common-util</artifactId>
-                <version>${controller.model.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.felix</groupId>
-                    <artifactId>maven-bundle-plugin</artifactId>
-                    <version>${maven.plugin.bundle.version}</version>
-                    <extensions>true</extensions>
-                    <configuration>
-                        <instructions>
-                            <Import-Package>*</Import-Package>
-                        </instructions>
-                        <manifestLocation>${project.build.directory}/META-INF</manifestLocation>
-                    </configuration>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.opendaylight.yangtools</groupId>
-                    <artifactId>yang-maven-plugin</artifactId>
-                    <version>${yangtools.version}</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>generate-sources</goal>
-                            </goals>
-                            <configuration>
-                                <yangFilesRootDir>src/main/yang</yangFilesRootDir>
-                                <codeGenerators>
-                                    <generator>
-                                        <codeGeneratorClass>
-                                            org.opendaylight.yangtools.maven.sal.api.gen.plugin.CodeGeneratorImpl
-                                        </codeGeneratorClass>
-                                        <outputBaseDir>
-                                            target/generated-sources/sal
-                                        </outputBaseDir>
-                                    </generator>
-                                    <generator>
-                                        <codeGeneratorClass>
-                                            org.opendaylight.yangtools.yang.unified.doc.generator.maven.DocumentationGeneratorImpl
-                                        </codeGeneratorClass>
-                                        <outputBaseDir>target/site/restconf</outputBaseDir>
-                                    </generator>
-                                </codeGenerators>
-                                <inspectDependencies>true</inspectDependencies>
-                            </configuration>
-                        </execution>
-                    </executions>
-
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.opendaylight.yangtools</groupId>
-                            <artifactId>maven-sal-api-gen-plugin</artifactId>
-                            <version>${yangtools.generator.version}</version>
-                            <type>jar</type>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.opendaylight.controller</groupId>
-                            <artifactId>yang-jmx-generator-plugin</artifactId>
-                            <version>${yangtools.jmx.generator.version}</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>${checkstyle.version}</version>
-                </plugin>
-                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-                <plugin>
-                    <groupId>org.eclipse.m2e</groupId>
-                    <artifactId>discovery-mapping</artifactId>
-                    <version>${mave.eclipse.m2e.plugin.version}</version>
-                    <configuration>
-                        <discoveryMappingMetadata>
-                            <pluginExecutions>
-                                <pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>
-                                            org.apache.maven.plugins
-                                        </groupId>
-                                        <artifactId>
-                                            maven-checkstyle-plugin
-                                        </artifactId>
-                                        <versionRange>
-                                            [2.10,)
-                                        </versionRange>
-                                        <goals>
-                                            <goal>check</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <ignore></ignore>
-                                    </action>
-                                </pluginExecution>
-                            </pluginExecutions>
-                        </discoveryMappingMetadata>
-                    </configuration>
-                </plugin>
-                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-                <plugin>
-                    <groupId>org.eclipse.m2e</groupId>
-                    <artifactId>lifecycle-mapping</artifactId>
-                    <version>${maven.lifecycle-mapping.plugin.version}</version>
-                    <configuration>
-                        <lifecycleMappingMetadata>
-                            <pluginExecutions>
-                                <pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>
-                                            org.apache.maven.plugins
-                                        </groupId>
-                                        <artifactId>
-                                            maven-checkstyle-plugin
-                                        </artifactId>
-                                        <versionRange>
-                                            [2.10,)
-                                        </versionRange>
-                                        <goals>
-                                            <goal>check</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <ignore></ignore>
-                                    </action>
-                                </pluginExecution>
-                            </pluginExecutions>
-                        </lifecycleMappingMetadata>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <configuration>
-                    <failsOnError>true</failsOnError>
-                    <configLocation>controller/checkstyle.xml</configLocation>
-                    <consoleOutput>true</consoleOutput>
-                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                    <sourceDirectory>${project.basedir}</sourceDirectory>
-                    <includes>**\/*.java,**\/*.xml,**\/*.ini,**\/*.sh,**\/*.bat</includes>
-                    <excludes>**\/target\/,**\/bin\/,**\/target-ide\/,**\/${jmxGeneratorPath}\/,**\/${salGeneratorPath}\/,**\/xtend-gen\/</excludes>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.opendaylight.controller</groupId>
-                        <artifactId>checkstyle</artifactId>
-                        <version>${opendaylight.checkstyle.version}</version>
-                    </dependency>
-                </dependencies>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <phase>process-sources</phase>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+    <name>discovery</name>
 
     <modules>
         <module>model</module>
@@ -313,4 +29,22 @@
         <module>samples/device</module>
     </modules>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
